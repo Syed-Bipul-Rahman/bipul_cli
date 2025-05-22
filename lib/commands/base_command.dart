@@ -19,4 +19,27 @@ abstract class BaseCommand {
   bool isInteractive() {
     return stdin.hasTerminal;  // Now this works!
   }
+
+
+  /// Validates if a project name is valid according to Dart package rules
+  bool isValidProjectName(String name) {
+    final regex = RegExp(r'^[a-z][a-z0-9_]*$');
+    return regex.hasMatch(name);
+  }
+
+  /// Formats project name to be Dart-compliant
+  String formatProjectName(String name) {
+    // Replace hyphens with underscores
+    var formatted = name.replaceAll('-', '_');
+
+    // Remove any invalid characters
+    formatted = formatted.replaceAll(RegExp(r'[^a-z0-9_]'), '');
+
+    // Ensure starts with a letter
+    if (formatted.isEmpty || !RegExp(r'[a-z]').hasMatch(formatted[0])) {
+      formatted = 'app_$formatted';
+    }
+
+    return formatted;
+  }
 }

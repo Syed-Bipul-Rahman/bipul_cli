@@ -7,15 +7,48 @@ import 'package:bipul_cli/utils/validator.dart';
 import 'package:bipul_cli/commands/base_command.dart';
 import 'package:recase/recase.dart';
 
-
 class CreateCommand extends BaseCommand {
   final String templatePath = 'lib/templates/project';
 
   void run(List<String> args) {
-    if (!validateArgs(args)) return;
+    if (args.isEmpty || !args[0].contains(':')) {
+      _showUsage();
+      return;
+    }
 
-    final projectName = args[0];
-    final Map<String, dynamic> options = _parseOptions(args);
+    final parts = args[0].split(':');
+    if (parts.length != 2) {
+      _showUsage();
+      return;
+    }
+
+    final type = parts[0]; // "project" or "feature"
+    String rawProjectName = parts[1]; // "test_app"
+
+    // Only "project" type is supported for now
+    if (type != 'project') {
+      print('\n❌ Only "project" type is currently supported!');
+      _showUsage();
+      return;
+    }
+
+    // Format and validate project name
+    String projectName = formatProjectName(rawProjectName);
+
+    if (!Validator.isValidProjectName(projectName)) {
+      print('\n❌ Invalid project name: "$rawProjectName"');
+      print('After formatting, name became "$projectName", which is still invalid.');
+      print('Project name must:');
+      print('  ✓ Start with lowercase letter');
+      print('  ✓ Use only lowercase letters, numbers, and underscores');
+      print('  ✓ Not contain special characters or spaces');
+      print('Example: bipul create project:my_cool_app');
+      return;
+    }
+
+    // Safely handle extra args
+    final List<String> extraArgs = args.length > 1 ? args.sublist(1) : [];
+    final Map<String, dynamic> options = _parseOptions(extraArgs);
 
     final projectPath = p.join(Directory.current.path, projectName);
 
@@ -25,9 +58,11 @@ class CreateCommand extends BaseCommand {
     }
 
     _askConfigurationOptions(options);
+    final companyDomain = _askCompanyDomain();
+    options['company_domain'] = companyDomain;
 
-    _createProject(projectName, projectPath, options);
-    _createHomeFeature(projectName, projectPath);
+    _createFlutterProject(projectName, projectPath, options);
+    _applyBipulStructure(projectPath, projectName, options);
     _showSuccessMessage(projectName, projectPath, options);
   }
 
@@ -39,7 +74,7 @@ class CreateCommand extends BaseCommand {
     };
 
     // Parse options from command line if provided
-    for (final arg in args.sublist(1)) {
+    for (var arg in args) { // ← We changed this loop to use the safe args
       if (arg.startsWith('--android=')) {
         final value = arg.substring('--android='.length).toLowerCase();
         if (value == 'java' || value == 'kotlin') {
@@ -61,8 +96,7 @@ class CreateCommand extends BaseCommand {
   }
 
   Future<void> _askConfigurationOptions(Map<String, dynamic> options) async {
-    final pen = AnsiPen()
-      ..blue(bold: true);
+    final pen = AnsiPen()..blue(bold: true);
 
     // Ask for Android language
     if (options['android_language'] == null) {
@@ -98,134 +132,99 @@ class CreateCommand extends BaseCommand {
     }
   }
 
-  // void _createProject(String projectName, String projectPath,
-  //     Map<String, dynamic> options) {
-  //   final templateDir = Directory(templatePath);
-  //   if (!templateDir.existsSync()) {
-  //     throw Exception('Template directory not found at $templatePath');
-  //   }
-  //
-  //   FileUtils.copyDirectory(templateDir, Directory(projectPath));
-  //   _replacePlaceholders(projectPath, projectName, options);
-  //
-  //   // Configure platform-specific settings
-  //   _configurePlatformLanguages(projectPath, options);
-  //
-  //   // Add or remove linter based on user preference
-  //   _configureLinter(projectPath, options);
-  // }
-  void _createProject(String projectName, String projectPath,
-      Map<String, dynamic> options) {
-    final templateDir = Directory(templatePath);
+  String _askCompanyDomain() {
+    print('\n🏢 What is your company\'s domain? Example: com.yourcompany');
+    final domain = stdin.readLineSync()?.trim() ?? 'yourcompany';
+    return domain;
+  }
 
-    if (!templateDir.existsSync()) {
-      throw Exception('Template directory not found at ${templateDir.path}');
+  void _createFlutterProject(String projectName, String projectPath, Map<String, dynamic> options) {
+    final androidLanguage = options['android_language'] == 'java' ? 'java' : 'kotlin';
+    final iosLanguage = options['ios_language'] == 'objc' ? 'objc' : 'swift';
+    final orgName = "com.${options['company_domain']}.${projectName.toLowerCase()}";
+
+    print('\n🏃‍♂️ Running flutter create...');
+
+    final flutterCreateProcess = Process.runSync(
+      'flutter',
+      [
+        'create',
+        '--no-pub',
+        '-a', androidLanguage,
+        '--org', orgName,
+        '--platforms', 'android,ios',
+        projectPath
+      ],
+      runInShell: true,
+    );
+
+    if (flutterCreateProcess.exitCode != 0) {
+      throw Exception('Flutter create failed: ${flutterCreateProcess.stderr}');
     }
 
+    print(flutterCreateProcess.stdout);
 
+    // Run pub get
+    print('\n📦 Running flutter pub get...');
+    final pubGetProcess = Process.runSync(
+      'flutter',
+      ['pub', 'get'],
+      workingDirectory: projectPath,
+    );
+
+    if (pubGetProcess.exitCode != 0) {
+      throw Exception('Pub get failed: ${pubGetProcess.stderr}');
+    }
+
+    print(pubGetProcess.stdout);
+
+    // Add linter if needed
+    if (options['include_linter'] == true) {
+      _addLinter(projectPath);
+    }
+  }
+
+  void _applyBipulStructure(String projectPath, String projectName, Map<String, dynamic> options) {
+    print('\n🏗️ Applying Bipul Architecture...');
+
+    // Delete default lib content
+    final libDir = Directory(p.join(projectPath, 'lib'));
+    if (libDir.existsSync()) {
+      libDir.deleteSync(recursive: true);
+    }
+    libDir.createSync();
+
+    // Create our folder structure
     TemplateRenderer.renderProjectTemplates(projectPath, {
       'project_name': projectName,
       'ProjectName': formatName(projectName),
       'android_language': options['android_language'],
       'ios_language': options['ios_language'],
-      'include_linter': options['include_linter'] == true ? true : false,
+      'include_linter': options['include_linter'],
     });
 
-    _replacePlaceholders(projectPath, projectName, options);
-
-    // Configure platform-specific settings
-    _configurePlatformLanguages(projectPath, options);
-
-    // Add or remove linter based on user preference
-    _configureLinter(projectPath, options);
+    // Create home feature
+    final featurePath = p.join(projectPath, 'lib', 'features', 'home');
+    TemplateRenderer.renderFeature('home', featurePath);
   }
 
-  void _replacePlaceholders(String projectPath, String projectName,
-      Map<String, dynamic> options) {
-    final filesToProcess = [
-      p.join(projectPath, 'pubspec.yaml'),
-      p.join(projectPath, 'lib', 'main.dart'),
-      p.join(projectPath, 'README.md'),
-    ];
+  void _addLinter(String projectPath) {
+    print('\n🧼 Adding Flutter Linter...');
 
-    for (final filePath in filesToProcess) {
-      if (File(filePath).existsSync()) {
-        var content = File(filePath).readAsStringSync();
-        content = content
-            .replaceAll('{{project_name}}', projectName)
-            .replaceAll('{{ProjectName}}', formatName(projectName))
-            .replaceAll('{{android_language}}', options['android_language'])
-            .replaceAll('{{ios_language}}', options['ios_language']);
-
-        File(filePath).writeAsStringSync(content);
-      }
-    }
-  }
-
-  void _configurePlatformLanguages(String projectPath,
-      Map<String, dynamic> options) {
-    final androidPath = p.join(projectPath, 'android');
-    final iosPath = p.join(projectPath, 'ios');
-
-    // For Android
-    if (options['android_language'] == 'kotlin') {
-      // Remove Java files
-      final javaDir = p.join(androidPath, 'app', 'src', 'main', 'java');
-      if (Directory(javaDir).existsSync()) {
-        Directory(javaDir).deleteSync(recursive: true);
-      }
-    } else {
-      // Remove Kotlin files
-      final kotlinDir = p.join(androidPath, 'app', 'src', 'main', 'kotlin');
-      if (Directory(kotlinDir).existsSync()) {
-        Directory(kotlinDir).deleteSync(recursive: true);
-      }
-    }
-
-    // For iOS
-    if (options['ios_language'] == 'swift') {
-      // Remove Objective-C files
-      final objcFiles = [
-        p.join(iosPath, 'Runner', 'AppDelegate.m'),
-        p.join(iosPath, 'Runner', 'main.m'),
-      ];
-
-      for (final file in objcFiles) {
-        if (File(file).existsSync()) {
-          File(file).deleteSync();
-        }
-      }
-    } else {
-      // Remove Swift files
-      final swiftFiles = [
-        p.join(iosPath, 'Runner', 'AppDelegate.swift'),
-        p.join(iosPath, 'Runner', 'Runner-Bridging-Header.h'),
-      ];
-
-      for (final file in swiftFiles) {
-        if (File(file).existsSync()) {
-          File(file).deleteSync();
-        }
-      }
-    }
-  }
-
-  void _configureLinter(String projectPath, Map<String, dynamic> options) {
     final pubspecFile = File(p.join(projectPath, 'pubspec.yaml'));
     var content = pubspecFile.readAsStringSync();
 
-    if (options['include_linter'] == true) {
-      // Add flutter_lints dependency
-      if (!content.contains('flutter_lints')) {
-        content = content.replaceFirst(
-            'dev_dependencies:',
-            'dev_dependencies:\n  flutter_lints: ^2.0.0',
-            content.indexOf('dev_dependencies:')
-        );
-      }
+    if (!content.contains('flutter_lints')) {
+      content = content.replaceFirst(
+          'dev_dependencies:',
+          'dev_dependencies:\n  flutter_lints: ^2.0.0',
+          content.indexOf('dev_dependencies:'));
+    }
 
-      // Add analysis_options.yaml
-      final analysisOptions = '''
+    pubspecFile.writeAsStringSync(content);
+
+    // Add analysis_options.yaml
+    final analysisOptions = '''
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
@@ -234,35 +233,21 @@ analyzer:
     - pattern-type-nulls
 ''';
 
-      File(p.join(projectPath, 'analysis_options.yaml'))
-          .writeAsStringSync(analysisOptions);
-    } else {
-      // Remove flutter_lints if present
-      content = content.replaceAll(
-          RegExp(r'\s+flutter_lints: ^.*$', multiLine: true), '');
+    File(p.join(projectPath, 'analysis_options.yaml'))
+        .writeAsStringSync(analysisOptions);
 
-      // Remove analysis_options.yaml if exists
-      final analysisFile = File(p.join(projectPath, 'analysis_options.yaml'));
-      if (analysisFile.existsSync()) {
-        analysisFile.deleteSync();
-      }
-    }
+    // Run pub add for flutter_lints
+    final pubAddProcess = Process.runSync(
+      'flutter',
+      ['pub', 'add', 'flutter_lints'],
+      workingDirectory: projectPath,
+    );
 
-    pubspecFile.writeAsStringSync(content);
+    print(pubAddProcess.stdout);
   }
 
-  void _createHomeFeature(String projectName, String projectPath) {
-    final featurePath = p.join(projectPath, 'lib', 'features', 'home');
-    Directory(featurePath).createSync(recursive: true);
-
-    // Generate home feature files from templates
-    TemplateRenderer.renderFeature('home', featurePath);
-  }
-
-  void _showSuccessMessage(String projectName, String projectPath,
-      Map<String, dynamic> options) {
-    final pen = AnsiPen()
-      ..green(bold: true);
+  void _showSuccessMessage(String projectName, String projectPath, Map<String, dynamic> options) {
+    final pen = AnsiPen()..green(bold: true);
     print('\n✅ Successfully created Flutter project "$projectName"');
     print('\n👉 Next steps:');
     print('  cd $projectName');
@@ -274,8 +259,20 @@ analyzer:
     print('  ✓ Home Feature Pre-Installed');
     print('  ✓ Android language: ${options['android_language'].toUpperCase()}');
     print('  ✓ iOS language: ${options['ios_language'].toUpperCase()}');
-    print('  ✓ Linter: ${options['include_linter']
-        ? 'Included'
-        : 'Not included'}');
+    print('  ✓ Linter: ${options['include_linter'] ? 'Included' : 'Not included'}');
+    print('  ✓ Created using official flutter create');
+    print('  ✓ Fully compatible with Flutter ecosystem');
+  }
+
+  void _showUsage() {
+    final pen = AnsiPen()..red(bold: true);
+    print('\n${pen('ERROR')}: Invalid create command format');
+    print('''
+Usage:
+  bipul create project:project_name
+
+Example:
+  bipul create project:my_cool_app
+''');
   }
 }
