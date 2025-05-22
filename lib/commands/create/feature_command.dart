@@ -58,7 +58,7 @@ class FeatureCommand extends BaseCommand {
   }
 
   void _updateRoutes(String projectPath, String featureName) {
-    final routesFile = p.join(projectPath, 'lib', 'config', 'routes', 'route_names.dart');
+    final routesFile = p.join(projectPath, 'lib', 'config', 'routes', 'route_names.dart.mustache');
     if (!File(routesFile).existsSync()) return;
 
     var content = File(routesFile).readAsStringSync();
@@ -76,7 +76,7 @@ class FeatureCommand extends BaseCommand {
   }
 
   void _updateDI(String projectPath, String featureName) {
-    final injectorFile = p.join(projectPath, 'lib', 'config', 'di', 'injector.dart');
+    final injectorFile = p.join(projectPath, 'lib', 'config', 'di', 'injector.dart.mustache');
     if (!File(injectorFile).existsSync()) return;
 
     var content = File(injectorFile).readAsStringSync();

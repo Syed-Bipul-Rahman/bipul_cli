@@ -8,17 +8,13 @@ class FileUtils {
     }
 
     for (var entity in source.listSync()) {
-      var relativePath = p.relative(entity.path, from: source.path);
+      var relativePath = p.relative(entity.path, from: source.path); // ← Fixed here
       var destPath = p.join(destination.path, relativePath);
 
       if (entity is File) {
-        var destFile = File(destPath);
-        destFile.parent.createSync(recursive: true);
-        entity.copySync(destFile.path);
+        entity.copySync(destPath);
       } else if (entity is Directory) {
-        var destDir = Directory(destPath);
-        destDir.createSync(recursive: true);
-        copyDirectory(entity, destDir);
+        copyDirectory(entity, Directory(destPath));
       }
     }
   }
