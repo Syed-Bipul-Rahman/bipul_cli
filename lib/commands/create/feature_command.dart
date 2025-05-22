@@ -58,11 +58,13 @@ class FeatureCommand extends BaseCommand {
   }
 
   void _updateRoutes(String projectPath, String featureName) {
-    final routesFile = p.join(projectPath, 'lib', 'config', 'routes', 'route_names.dart.mustache');
+    final routesFile = p.join(
+        projectPath, 'lib', 'config', 'routes', 'route_names.dart.mustache');
     if (!File(routesFile).existsSync()) return;
 
     var content = File(routesFile).readAsStringSync();
-    final routeConstant = "  static const String ${featureName} = '/${featureName}';";
+    final routeConstant =
+        "  static const String ${featureName} = '/${featureName}';";
 
     if (!content.contains(routeConstant)) {
       content = content.replaceFirst(
@@ -76,14 +78,16 @@ class FeatureCommand extends BaseCommand {
   }
 
   void _updateDI(String projectPath, String featureName) {
-    final injectorFile = p.join(projectPath, 'lib', 'config', 'di', 'injector.dart.mustache');
+    final injectorFile =
+        p.join(projectPath, 'lib', 'config', 'di', 'injector.dart.mustache');
     if (!File(injectorFile).existsSync()) return;
 
     var content = File(injectorFile).readAsStringSync();
     final pascalName = formatName(featureName);
 
     // Add imports
-    final importLine = "import 'package:your_project/features/${featureName}/presentation/viewmodels/${featureName}_viewmodel.dart';";
+    final importLine =
+        "import 'package:your_project/features/${featureName}/presentation/viewmodels/${featureName}_viewmodel.dart';";
     if (!content.contains(importLine)) {
       content = content.replaceFirst(
         '// Features imports',
@@ -103,7 +107,9 @@ class FeatureCommand extends BaseCommand {
   }
 
   void _showSuccessMessage(String featureName) {
-    final pen = AnsiPen()..green(bold: true)..bgBlack();
+    final pen = AnsiPen()
+      ..green(bold: true)
+      ..bgBlack();
     print('\n✅ Successfully created feature "$featureName"');
     print('\n✨ The feature includes:');
     print('  ✓ Data Layer (Models, DataSources, Repositories)');

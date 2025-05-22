@@ -37,7 +37,8 @@ class CreateCommand extends BaseCommand {
 
     if (!Validator.isValidProjectName(projectName)) {
       print('\n❌ Invalid project name: "$rawProjectName"');
-      print('After formatting, name became "$projectName", which is still invalid.');
+      print(
+          'After formatting, name became "$projectName", which is still invalid.');
       print('Project name must:');
       print('  ✓ Start with lowercase letter');
       print('  ✓ Use only lowercase letters, numbers, and underscores');
@@ -74,7 +75,8 @@ class CreateCommand extends BaseCommand {
     };
 
     // Parse options from command line if provided
-    for (var arg in args) { // ← We changed this loop to use the safe args
+    for (var arg in args) {
+      // ← We changed this loop to use the safe args
       if (arg.startsWith('--android=')) {
         final value = arg.substring('--android='.length).toLowerCase();
         if (value == 'java' || value == 'kotlin') {
@@ -138,10 +140,13 @@ class CreateCommand extends BaseCommand {
     return domain;
   }
 
-  void _createFlutterProject(String projectName, String projectPath, Map<String, dynamic> options) {
-    final androidLanguage = options['android_language'] == 'java' ? 'java' : 'kotlin';
+  void _createFlutterProject(
+      String projectName, String projectPath, Map<String, dynamic> options) {
+    final androidLanguage =
+        options['android_language'] == 'java' ? 'java' : 'kotlin';
     final iosLanguage = options['ios_language'] == 'objc' ? 'objc' : 'swift';
-    final orgName = "com.${options['company_domain']}.${projectName.toLowerCase()}";
+    final orgName =
+        "com.${options['company_domain']}.${projectName.toLowerCase()}";
 
     print('\n🏃‍♂️ Running flutter create...');
 
@@ -150,9 +155,12 @@ class CreateCommand extends BaseCommand {
       [
         'create',
         '--no-pub',
-        '-a', androidLanguage,
-        '--org', orgName,
-        '--platforms', 'android,ios',
+        '-a',
+        androidLanguage,
+        '--org',
+        orgName,
+        '--platforms',
+        'android,ios',
         projectPath
       ],
       runInShell: true,
@@ -184,20 +192,42 @@ class CreateCommand extends BaseCommand {
     }
   }
 
-
-  void _replacePlaceholdersInAllFiles(String folderPath, Map<String, dynamic> context) {
+  // void _replacePlaceholdersInAllFiles(String folderPath, Map<String, dynamic> context) {
+  //   final dir = Directory(folderPath);
+  //
+  //   if (!dir.existsSync()) return;
+  //
+  //   for (var entity in dir.listSync(recursive: true, followLinks: false)) {
+  //     if (entity is File && (entity.path.endsWith('.dart') || entity.path.endsWith('.yaml'))) {
+  //       var content = entity.readAsStringSync();
+  //
+  //       context.forEach((key, value) {
+  //         content = content.replaceAll('{{$key}}', '$value');
+  //         content = content.replaceAll('{{${key}_snake}}', ReCase('$value').snakeCase);
+  //         content = content.replaceAll('{{${key}_pascal}}', ReCase('$value').pascalCase);
+  //       });
+  //
+  //       entity.writeAsStringSync(content);
+  //     }
+  //   }
+  // }
+  void _replacePlaceholdersInAllFiles(
+      String folderPath, Map<String, dynamic> context) {
     final dir = Directory(folderPath);
 
     if (!dir.existsSync()) return;
 
     for (var entity in dir.listSync(recursive: true, followLinks: false)) {
-      if (entity is File && (entity.path.endsWith('.dart') || entity.path.endsWith('.yaml'))) {
+      if (entity is File &&
+          (entity.path.endsWith('.dart') || entity.path.endsWith('.yaml'))) {
         var content = entity.readAsStringSync();
 
         context.forEach((key, value) {
           content = content.replaceAll('{{$key}}', '$value');
-          content = content.replaceAll('{{${key}_snake}}', ReCase('$value').snakeCase);
-          content = content.replaceAll('{{${key}_pascal}}', ReCase('$value').pascalCase);
+          content = content.replaceAll(
+              '{{${key}_snake}}', ReCase('$value').snakeCase);
+          content = content.replaceAll(
+              '{{${key}_pascal}}', ReCase('$value').pascalCase);
         });
 
         entity.writeAsStringSync(content);
@@ -205,9 +235,44 @@ class CreateCommand extends BaseCommand {
     }
   }
 
+  // void _applyBipulStructure(String projectPath, String projectName, Map<String, dynamic> options) {
+  //   print('\n🏗️ Applying Bipul Architecture...');
+  //
+  //   final projectLibPath = p.join(projectPath, 'lib');
+  //
+  //   // Delete default lib content
+  //   final libDir = Directory(projectLibPath);
+  //   if (libDir.existsSync()) {
+  //     libDir.deleteSync(recursive: true);
+  //   }
+  //   libDir.createSync();
+  //
+  //   // Copy full architecture structure from template
+  //   final templateLibDir = Directory('lib/templates/project/lib');
+  //
+  //   if (templateLibDir.existsSync()) {
+  //     print('📦 Copying template files from $templateLibDir');
+  //     FileUtils.copyDirectory(templateLibDir, libDir);
+  //
+  //     // Replace placeholders in all files
+  //     _replacePlaceholdersInAllFiles(projectLibPath, {
+  //       'project_name': projectName,
+  //       'ProjectName': formatName(projectName),
+  //       'android_language': options['android_language'],
+  //       'ios_language': options['ios_language'],
+  //       'include_linter': options['include_linter'],
+  //     });
+  //   } else {
+  //     throw Exception('Template not found at $templateLibDir\nPlease make sure the template folder exists with all required files');
+  //   }
+  //
+  //   // Create home feature
+  //   final featurePath = p.join(projectPath, 'lib', 'features', 'home');
+  //   TemplateRenderer.renderFeature('home', featurePath);
+  // }
 
-
-  void _applyBipulStructure(String projectPath, String projectName, Map<String, dynamic> options) {
+  void _applyBipulStructure(
+      String projectPath, String projectName, Map<String, dynamic> options) {
     print('\n🏗️ Applying Bipul Architecture...');
 
     final projectLibPath = p.join(projectPath, 'lib');
@@ -223,19 +288,17 @@ class CreateCommand extends BaseCommand {
     final templateLibDir = Directory('lib/templates/project/lib');
 
     if (templateLibDir.existsSync()) {
-      print('📦 Copying template files from $templateLibDir');
-      FileUtils.copyDirectory(templateLibDir, libDir);
-
-      // Replace placeholders in all files
-      _replacePlaceholdersInAllFiles(projectLibPath, {
+      print('📦 Rendering template files...');
+      TemplateRenderer.renderProjectTemplates(projectLibPath, {
         'project_name': projectName,
         'ProjectName': formatName(projectName),
         'android_language': options['android_language'],
         'ios_language': options['ios_language'],
-        'include_linter': options['include_linter'],
+        'include_linter': options['include_linter'] == true ? true : false,
       });
     } else {
-      throw Exception('Template not found at $templateLibDir\nPlease make sure the template folder exists with all required files');
+      throw Exception(
+          'Template not found at $templateLibDir\nPlease make sure the template folder exists with all required files');
     }
 
     // Create home feature
@@ -281,7 +344,8 @@ analyzer:
     print(pubAddProcess.stdout);
   }
 
-  void _showSuccessMessage(String projectName, String projectPath, Map<String, dynamic> options) {
+  void _showSuccessMessage(
+      String projectName, String projectPath, Map<String, dynamic> options) {
     final pen = AnsiPen()..green(bold: true);
     print('\n✅ Successfully created Flutter project "$projectName"');
     print('\n👉 Next steps:');
@@ -294,7 +358,8 @@ analyzer:
     print('  ✓ Home Feature Pre-Installed');
     print('  ✓ Android language: ${options['android_language'].toUpperCase()}');
     print('  ✓ iOS language: ${options['ios_language'].toUpperCase()}');
-    print('  ✓ Linter: ${options['include_linter'] ? 'Included' : 'Not included'}');
+    print(
+        '  ✓ Linter: ${options['include_linter'] ? 'Included' : 'Not included'}');
     print('  ✓ Created using official flutter create');
     print('  ✓ Fully compatible with Flutter ecosystem');
   }

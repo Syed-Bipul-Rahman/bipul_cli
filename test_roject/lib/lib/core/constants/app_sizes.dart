@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart.mustache';
+import 'package:test_roject/core/constants/app_constants.dart.mustache';
 
 
 class MyApp extends StatelessWidget {

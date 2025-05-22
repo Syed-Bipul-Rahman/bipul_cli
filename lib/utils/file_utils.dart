@@ -8,7 +8,8 @@ class FileUtils {
     }
 
     for (var entity in source.listSync()) {
-      var relativePath = p.relative(entity.path, from: source.path); // ← Fixed here
+      var relativePath =
+          p.relative(entity.path, from: source.path); // ← Fixed here
       var destPath = p.join(destination.path, relativePath);
 
       if (entity is File) {

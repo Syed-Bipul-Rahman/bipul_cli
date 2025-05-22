@@ -4,6 +4,7 @@ import 'commands/help_command.dart';
 import 'commands/version_command.dart';
 import 'utils/logger.dart';
 import 'package:bipul_cli/commands/create/create_command.dart';
+
 class BipulCli {
   final Logger _logger = Logger('BipulCli');
 

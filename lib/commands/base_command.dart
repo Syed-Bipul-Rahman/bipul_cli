@@ -1,4 +1,4 @@
-import 'dart:io';  // ← Add this line
+import 'dart:io'; // ← Add this line
 import 'package:ansicolor/ansicolor.dart';
 import 'package:logging/logging.dart';
 
@@ -13,13 +13,15 @@ abstract class BaseCommand {
   }
 
   String formatName(String name) {
-    return name.split(RegExp(r'[_-]')).map((s) => s[0].toUpperCase() + s.substring(1)).join();
+    return name
+        .split(RegExp(r'[_-]'))
+        .map((s) => s[0].toUpperCase() + s.substring(1))
+        .join();
   }
 
   bool isInteractive() {
-    return stdin.hasTerminal;  // Now this works!
+    return stdin.hasTerminal; // Now this works!
   }
-
 
   /// Validates if a project name is valid according to Dart package rules
   bool isValidProjectName(String name) {
