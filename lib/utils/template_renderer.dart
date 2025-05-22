@@ -1,8 +1,31 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:mustache_template/mustache_template.dart';
-
+import 'package:recase/recase.dart';
 class TemplateRenderer {
+  static void renderProjectTemplates(String projectPath, Map<String, dynamic> context) {
+    final templateDir = Directory('lib/templates/project');
+
+    if (!templateDir.existsSync()) return;
+
+    for (var entity in templateDir.listSync(recursive: true)) {
+      if (entity is File && entity.path.endsWith('.mustache')) {
+        // Create target path without .mustache extension
+        final relativePath = p.relative(entity.path, from: templateDir.path);
+        final targetPath = p.join(projectPath, relativePath.replaceAll('.mustache', ''));
+
+        // Create parent directory if needed
+        final targetFile = File(targetPath);
+        targetFile.createSync(recursive: true);
+
+        // Render and write file
+        final template = Template(entity.readAsStringSync());
+        final rendered = template.renderString(context);
+        targetFile.writeAsStringSync(rendered);
+      }
+    }
+  }
+
   static final String templateBasePath = p.join('templates', 'feature');
 
   static void renderFeature(String featureName, String featurePath) {

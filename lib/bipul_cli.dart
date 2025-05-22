@@ -13,8 +13,8 @@ class BipulCli {
     try {
       final parser = ArgParser()
         ..addCommand('create')
-        ..addCommand('help')
-        ..addCommand('version');
+        ..addCommand('--help')
+        ..addCommand('--version');
 
       final results = parser.parse(args);
 

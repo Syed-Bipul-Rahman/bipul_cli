@@ -1,12 +1,15 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import 'dart:convert';
+import 'package:mustache_template/mustache_template.dart';
 import 'package:ansicolor/ansicolor.dart';
 import 'package:bipul_cli/utils/file_utils.dart';
 import 'package:bipul_cli/utils/template_renderer.dart';
+import 'package:bipul_cli/utils/validator.dart';
 import 'package:bipul_cli/commands/base_command.dart';
 
 class ProjectCommand extends BaseCommand {
-  final String templatePath = 'templates/project';
+  final String templatePath = 'lib/templates/project';
 
   @override
   void run(List<String> args) {
