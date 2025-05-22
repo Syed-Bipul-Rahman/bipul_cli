@@ -1,0 +1,8 @@
+import 'package:logging/logging.dart';
+
+void setupLogger() {
+  Logger.root.level = Level.INFO;
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.message}');
+  });
+}
