@@ -41,73 +41,101 @@ class TemplateRenderer {
   }
 
   /// Renders a new feature inside an existing project
+  // static void renderFeature(String featureName, String featurePath) {
+  //   final pascalName = _toPascalCase(featureName);
+  //   final snakeName = _toSnakeCase(featureName);
+
+  //   print('\n🧩 Generating feature "$featureName"...');
+
+  //   // Make sure feature folder exists
+  //   final featureDir = Directory(featurePath)..createSync(recursive: true);
+
+  //   // Render domain files
+  //   _renderTemplate(
+  //     templatePath: p.join('lib', 'templates', 'feature', 'domain', 'entity',
+  //         'entity.dart.mustache'),
+  //     outputPath:
+  //         p.join(featurePath, 'domain', 'entities', '${snakeName}_entity.dart'),
+  //     context: {'FeatureName': pascalName},
+  //   );
+
+  //   _renderTemplate(
+  //     templatePath: p.join('lib', 'templates', 'feature', 'domain',
+  //         'repository', 'repository.dart.mustache'),
+  //     outputPath: p.join(featurePath, 'domain', 'repositories',
+  //         '${snakeName}_repository.dart'),
+  //     context: {'FeatureName': pascalName},
+  //   );
+
+  //   _renderTemplate(
+  //     templatePath: p.join('lib', 'templates', 'feature', 'domain', 'usecase',
+  //         'usecase.dart.mustache'),
+  //     outputPath: p.join(
+  //         featurePath, 'domain', 'usecases', '${snakeName}_usecase.dart'),
+  //     context: {'FeatureName': pascalName},
+  //   );
+
+  //   // Render presentation files
+  //   _renderTemplate(
+  //     templatePath: p.join('lib', 'templates', 'feature', 'presentation',
+  //         'viewmodels', 'viewmodel.dart.mustache'),
+  //     outputPath: p.join(featurePath, 'presentation', 'viewmodels',
+  //         '${snakeName}_viewmodel.dart'),
+  //     context: {'FeatureName': pascalName},
+  //   );
+
+  //   _renderTemplate(
+  //     templatePath: p.join('lib', 'templates', 'feature', 'presentation',
+  //         'pages', 'page.dart.mustache'),
+  //     outputPath: p.join(
+  //         featurePath, 'presentation', 'pages', '${snakeName}_page.dart'),
+  //     context: {'FeatureName': pascalName},
+  //   );
+
+  //   _renderTemplate(
+  //     templatePath: p.join('lib', 'templates', 'feature', 'presentation',
+  //         'views', 'view.dart.mustache'),
+  //     outputPath: p.join(
+  //         featurePath, 'presentation', 'views', '${snakeName}_view.dart'),
+  //     context: {'FeatureName': pascalName},
+  //   );
+
+  //   _renderTemplate(
+  //     templatePath: p.join('lib', 'templates', 'feature', 'presentation',
+  //         'widgets', 'widget.dart.mustache'),
+  //     outputPath: p.join(
+  //         featurePath, 'presentation', 'widgets', '${snakeName}_widget.dart'),
+  //     context: {'FeatureName': pascalName},
+  //   );
+  // }
+
   static void renderFeature(String featureName, String featurePath) {
-    final pascalName = _toPascalCase(featureName);
-    final snakeName = _toSnakeCase(featureName);
-
-    print('\n🧩 Generating feature "$featureName"...');
-
-    // Make sure feature folder exists
-    final featureDir = Directory(featurePath)..createSync(recursive: true);
-
-    // Render domain files
-    _renderTemplate(
-      templatePath: p.join('lib', 'templates', 'feature', 'domain', 'entity',
-          'entity.dart.mustache'),
-      outputPath:
-          p.join(featurePath, 'domain', 'entities', '${snakeName}_entity.dart'),
-      context: {'FeatureName': pascalName},
-    );
-
-    _renderTemplate(
-      templatePath: p.join('lib', 'templates', 'feature', 'domain',
-          'repository', 'repository.dart.mustache'),
-      outputPath: p.join(featurePath, 'domain', 'repositories',
-          '${snakeName}_repository.dart'),
-      context: {'FeatureName': pascalName},
-    );
-
-    _renderTemplate(
-      templatePath: p.join('lib', 'templates', 'feature', 'domain', 'usecase',
-          'usecase.dart.mustache'),
-      outputPath: p.join(
-          featurePath, 'domain', 'usecases', '${snakeName}_usecase.dart'),
-      context: {'FeatureName': pascalName},
-    );
-
-    // Render presentation files
-    _renderTemplate(
-      templatePath: p.join('lib', 'templates', 'feature', 'presentation',
-          'viewmodels', 'viewmodel.dart.mustache'),
-      outputPath: p.join(featurePath, 'presentation', 'viewmodels',
-          '${snakeName}_viewmodel.dart'),
-      context: {'FeatureName': pascalName},
-    );
-
-    _renderTemplate(
-      templatePath: p.join('lib', 'templates', 'feature', 'presentation',
-          'pages', 'page.dart.mustache'),
-      outputPath: p.join(
-          featurePath, 'presentation', 'pages', '${snakeName}_page.dart'),
-      context: {'FeatureName': pascalName},
-    );
-
-    _renderTemplate(
-      templatePath: p.join('lib', 'templates', 'feature', 'presentation',
-          'views', 'view.dart.mustache'),
-      outputPath: p.join(
-          featurePath, 'presentation', 'views', '${snakeName}_view.dart'),
-      context: {'FeatureName': pascalName},
-    );
-
-    _renderTemplate(
-      templatePath: p.join('lib', 'templates', 'feature', 'presentation',
-          'widgets', 'widget.dart.mustache'),
-      outputPath: p.join(
-          featurePath, 'presentation', 'widgets', '${snakeName}_widget.dart'),
-      context: {'FeatureName': pascalName},
-    );
+  final templateDir = Directory(p.join('lib', 'templates', 'project', 'lib', 'features', featureName));
+  
+  if (!templateDir.existsSync()) {
+    throw Exception("Feature templates not found at $templateDir");
   }
+
+  print('🧩 Generating feature "$featureName"...');
+
+  for (var entity in templateDir.listSync(recursive: true)) {
+    if (entity is File && entity.path.endsWith('.mustache')) {
+      final relativePath = p.relative(entity.path, from: templateDir.path);
+      final targetPath = p.join(featurePath, relativePath.replaceAll('.mustache', ''));
+
+      final targetFile = File(targetPath);
+      targetFile.parent.createSync(recursive: true);
+
+      final template = Template(entity.readAsStringSync());
+      final rendered = template.renderString({
+        'FeatureName': _toPascalCase(featureName),
+        'feature_name': featureName,
+      });
+
+      targetFile.writeAsStringSync(rendered);
+    }
+  }
+}
 
   /// Internal method to render individual templates
   static void _renderTemplate({
