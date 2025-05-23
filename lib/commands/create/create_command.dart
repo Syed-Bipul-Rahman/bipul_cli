@@ -235,42 +235,7 @@ class CreateCommand extends BaseCommand {
     }
   }
 
-  // void _applyBipulStructure(String projectPath, String projectName, Map<String, dynamic> options) {
-  //   print('\n🏗️ Applying Bipul Architecture...');
-  //
-  //   final projectLibPath = p.join(projectPath, 'lib');
-  //
-  //   // Delete default lib content
-  //   final libDir = Directory(projectLibPath);
-  //   if (libDir.existsSync()) {
-  //     libDir.deleteSync(recursive: true);
-  //   }
-  //   libDir.createSync();
-  //
-  //   // Copy full architecture structure from template
-  //   final templateLibDir = Directory('lib/templates/project/lib');
-  //
-  //   if (templateLibDir.existsSync()) {
-  //     print('📦 Copying template files from $templateLibDir');
-  //     FileUtils.copyDirectory(templateLibDir, libDir);
-  //
-  //     // Replace placeholders in all files
-  //     _replacePlaceholdersInAllFiles(projectLibPath, {
-  //       'project_name': projectName,
-  //       'ProjectName': formatName(projectName),
-  //       'android_language': options['android_language'],
-  //       'ios_language': options['ios_language'],
-  //       'include_linter': options['include_linter'],
-  //     });
-  //   } else {
-  //     throw Exception('Template not found at $templateLibDir\nPlease make sure the template folder exists with all required files');
-  //   }
-  //
-  //   // Create home feature
-  //   final featurePath = p.join(projectPath, 'lib', 'features', 'home');
-  //   TemplateRenderer.renderFeature('home', featurePath);
-  // }
-
+ 
   void _applyBipulStructure(
       String projectPath, String projectName, Map<String, dynamic> options) {
     print('\n🏗️ Applying Bipul Architecture...');
@@ -302,9 +267,24 @@ class CreateCommand extends BaseCommand {
     }
 
     // Create home feature
-    final featurePath = p.join(projectPath, 'lib', 'features', 'home');
-    TemplateRenderer.renderFeature('home', featurePath);
+  //   final featurePath = p.join(projectPath, 'lib', 'features', 'home');
+  //   TemplateRenderer.renderFeature('home', featurePath);
+  
+  // Create home feature last
+final featurePath = p.join(projectPath, 'lib', 'features', 'home');
+
+print('\n🧩 Generating feature "home"...');
+TemplateRenderer.renderFeature('home', featurePath, {
+  'project_name': projectName,
+  'ProjectName': formatName(projectName),
+  'feature_name': 'home',
+  'FeatureName': 'Home',
+});
+
+
   }
+
+
 
   void _addLinter(String projectPath) {
     print('\n🧼 Adding Flutter Linter...');
