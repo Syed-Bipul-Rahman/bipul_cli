@@ -1,18 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart';
+import 'package:get_it/get_it.dart';
+import 'package:{{project_name}}/features/home/presentation/viewmodels/home_viewmodel.dart';
 
+final injector = GetIt.instance;
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
-}
+Future<void> setupDependencies() async {
+    // Home Feature
+    injector.registerLazySingleton(() => HomeViewModel());
+    }

@@ -4,7 +4,8 @@ import 'package:mustache_template/mustache_template.dart';
 
 class TemplateRenderer {
   /// Renders the full project architecture from templates
-  static void renderProjectTemplates(String projectPath, Map<String, dynamic> context) {
+  static void renderProjectTemplates(
+      String projectPath, Map<String, dynamic> context) {
     final templateDir = Directory('lib/templates/project/lib');
 
     if (!templateDir.existsSync()) {
@@ -19,7 +20,8 @@ class TemplateRenderer {
 
       if (entity is File && entity.path.endsWith('.mustache')) {
         final relativePath = p.relative(entity.path, from: templateDir.path);
-        final targetPath = p.join(projectPath, relativePath.replaceAll('.mustache', ''));
+        final targetPath =
+            p.join(projectPath, relativePath.replaceAll('.mustache', ''));
 
         final targetFile = File(targetPath)..parent.createSync(recursive: true);
 
@@ -43,8 +45,9 @@ class TemplateRenderer {
     String featurePath,
     Map<String, dynamic> context,
   ) {
-    final templateDir = Directory(p.join('lib', 'templates', 'project', 'lib', 'features', featureName));
-    
+    final templateDir = Directory(
+        p.join('lib', 'templates', 'project', 'lib', 'features', featureName));
+
     if (!templateDir.existsSync()) {
       throw Exception("Feature templates not found at $templateDir");
     }
@@ -54,7 +57,8 @@ class TemplateRenderer {
     for (var entity in templateDir.listSync(recursive: true)) {
       if (entity is File && entity.path.endsWith('.mustache')) {
         final relativePath = p.relative(entity.path, from: templateDir.path);
-        final targetPath = p.join(featurePath, relativePath.replaceAll('.mustache', ''));
+        final targetPath =
+            p.join(featurePath, relativePath.replaceAll('.mustache', ''));
 
         final targetFile = File(targetPath)..parent.createSync(recursive: true);
 

@@ -235,7 +235,6 @@ class CreateCommand extends BaseCommand {
     }
   }
 
- 
   void _applyBipulStructure(
       String projectPath, String projectName, Map<String, dynamic> options) {
     print('\n🏗️ Applying Bipul Architecture...');
@@ -267,24 +266,20 @@ class CreateCommand extends BaseCommand {
     }
 
     // Create home feature
-  //   final featurePath = p.join(projectPath, 'lib', 'features', 'home');
-  //   TemplateRenderer.renderFeature('home', featurePath);
-  
-  // Create home feature last
-final featurePath = p.join(projectPath, 'lib', 'features', 'home');
+    //   final featurePath = p.join(projectPath, 'lib', 'features', 'home');
+    //   TemplateRenderer.renderFeature('home', featurePath);
 
-print('\n🧩 Generating feature "home"...');
-TemplateRenderer.renderFeature('home', featurePath, {
-  'project_name': projectName,
-  'ProjectName': formatName(projectName),
-  'feature_name': 'home',
-  'FeatureName': 'Home',
-});
+    // Create home feature last
+    final featurePath = p.join(projectPath, 'lib', 'features', 'home');
 
-
+    print('\n🧩 Generating feature "home"...');
+    TemplateRenderer.renderFeature('home', featurePath, {
+      'project_name': projectName,
+      'ProjectName': formatName(projectName),
+      'feature_name': 'home',
+      'FeatureName': 'Home',
+    });
   }
-
-
 
   void _addLinter(String projectPath) {
     print('\n🧼 Adding Flutter Linter...');

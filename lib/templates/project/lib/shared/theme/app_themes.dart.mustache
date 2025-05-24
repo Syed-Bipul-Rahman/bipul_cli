@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart.mustache';
+import 'app_colors.dart';
 
+class AppThemes {
+static ThemeData darkTheme = ThemeData.dark().copyWith(
+primaryColor: AppColors.primaryColor,
+backgroundColor: Colors.black,
+);
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
+static ThemeData lightTheme = ThemeData.light().copyWith(
+primaryColor: AppColors.primaryColor,
+backgroundColor: Colors.white,
+);
 }

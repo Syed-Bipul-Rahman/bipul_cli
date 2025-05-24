@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:{{project_name}}/core/core.dart';
+import 'package:{{project_name}}/features/home/presentation/pages/home_page.dart';
 
 void main() {
+setupDependencies();
 runApp(const MyApp());
 }
 
@@ -10,15 +13,10 @@ const MyApp({Key? key}) : super(key: key);
 @override
 Widget build(BuildContext context) {
 return MaterialApp(
-title: '{{ProjectName}}',
-theme: ThemeData(
-primarySwatch: Colors.blue,
-),
-home: const Scaffold(
-body: Center(
-child: Text('Hello from {{ProjectName}}!'),
-),
-),
+title: AppConstants.appName,
+theme: ThemeData.dark(),
+onGenerateRoute: AppRouter.generateRoute,
+initialRoute: RouteNames.home,
 );
 }
 }

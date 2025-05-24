@@ -1,18 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart.mustache';
+import 'package:logging/logging.dart';
 
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
+void setupLogger() {
+Logger.root.level = Level.INFO;
+Logger.root.onRecord.listen((record) {
+print('${record.level.name}: ${record.message}');
+});
 }

@@ -1,18 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart.mustache';
+import 'package:shared_preferences/shared_preferences.dart';
 
+class CacheManager {
+final SharedPreferences _prefs;
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+CacheManager(this._prefs);
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
-}
+Future<void> saveToCache(String key, String value) async {
+    await _prefs.setString(key, value);
+    }
+
+    String? getFromCache(String key) {
+    return _prefs.getString(key);
+    }
+    }

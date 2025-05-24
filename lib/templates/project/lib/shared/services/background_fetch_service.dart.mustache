@@ -1,18 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart.mustache';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 
+class BackgroundFetchService {
+static void initialize() {
+WidgetsFlutterBinding.ensureInitialized();
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
+// Initialize background fetch logic here
+print('{{ProjectName}} background service initialized');
+}
 }
