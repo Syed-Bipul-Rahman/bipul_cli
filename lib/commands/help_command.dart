@@ -1,9 +1,6 @@
 import 'package:ansicolor/ansicolor.dart';
-import 'package:logging/logging.dart';
 
 class HelpCommand {
-  final Logger _logger = Logger('HelpCommand');
-
   void run(List<String> args) {
     AnsiPen pen = AnsiPen()..white(bold: true);
 

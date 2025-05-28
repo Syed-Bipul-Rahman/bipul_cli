@@ -1,12 +1,11 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
-import 'package:ansicolor/ansicolor.dart';
 import 'package:bipul_cli/utils/template_renderer.dart';
 import 'package:bipul_cli/commands/base_command.dart';
 import 'package:bipul_cli/utils/validator.dart';
+import 'package:recase/recase.dart';
 
 class FeatureCommand extends BaseCommand {
-  @override
   void run(List<String> args) {
     if (!validateArgs(args)) return;
 
@@ -26,16 +25,16 @@ class FeatureCommand extends BaseCommand {
       return;
     }
 
-    _generateFeature(featureName, featurePath);
+    _generateFeature(featureName, featurePath, projectPath);
     _updateRoutes(projectPath, featureName);
     _updateDI(projectPath, featureName);
     _showSuccessMessage(featureName);
   }
 
-  void _generateFeature(String featureName, String featurePath) {
+  void _generateFeature(
+      String featureName, String featurePath, String projectPath) {
     Directory(featurePath).createSync(recursive: true);
 
-    // Create feature structure
     final directories = [
       p.join(featurePath, 'data', 'models'),
       p.join(featurePath, 'data', 'datasources'),
@@ -53,53 +52,64 @@ class FeatureCommand extends BaseCommand {
       Directory(dir).createSync();
     }
 
-    // Generate files from templates
-    TemplateRenderer.renderFeature(featureName, featurePath);
+    final pubspecFile = File(p.join(projectPath, 'pubspec.yaml'));
+    final projectName = pubspecFile.existsSync()
+        ? (RegExp(r'^name:\s*(.+)$', multiLine: true)
+                .firstMatch(pubspecFile.readAsStringSync())
+                ?.group(1)
+                ?.trim() ??
+            'my_app')
+        : 'my_app';
+
+    TemplateRenderer.renderFeature(
+      'feature',
+      featurePath,
+      {
+        'project_name': projectName,
+        'ProjectName': formatName(projectName),
+        'feature_name': featureName,
+        'FeatureName': formatName(featureName),
+      },
+    );
   }
 
   void _updateRoutes(String projectPath, String featureName) {
-    final routesFile = p.join(
-        projectPath, 'lib', 'config', 'routes', 'route_names.dart.mustache');
+    final routesFile =
+        p.join(projectPath, 'lib', 'config', 'routes', 'route_names.dart');
     if (!File(routesFile).existsSync()) return;
 
     var content = File(routesFile).readAsStringSync();
     final routeConstant =
-        "  static const String ${featureName} = '/${featureName}';";
+        "  static const String $featureName = '/$featureName';";
 
     if (!content.contains(routeConstant)) {
       content = content.replaceFirst(
-        '} \n// END',
-        '  static const String ${featureName} = \'/${featureName}\';\n} \n// END',
-        content.indexOf('} \n// END'),
+        '}\n// END',
+        '$routeConstant\n}\n// END',
       );
-
       File(routesFile).writeAsStringSync(content);
     }
   }
 
   void _updateDI(String projectPath, String featureName) {
     final injectorFile =
-        p.join(projectPath, 'lib', 'config', 'di', 'injector.dart.mustache');
+        p.join(projectPath, 'lib', 'config', 'di', 'injector.dart');
     if (!File(injectorFile).existsSync()) return;
 
     var content = File(injectorFile).readAsStringSync();
     final pascalName = formatName(featureName);
 
-    // Add imports
     final importLine =
-        "import 'package:your_project/features/${featureName}/presentation/viewmodels/${featureName}_viewmodel.dart';";
+        "import 'package:${projectPath.split('/').last}/features/$featureName/presentation/viewmodels/${featureName}_viewmodel.dart';";
     if (!content.contains(importLine)) {
       content = content.replaceFirst(
         '// Features imports',
-        '// Features imports\nimport \'package:your_project/features/${featureName}/presentation/viewmodels/${featureName}_viewmodel.dart\';',
-        content.indexOf('// Features imports'),
+        '// Features imports\n$importLine',
       );
 
-      // Add viewmodel registration
       content = content.replaceFirst(
         '// Features dependencies',
         '// Features dependencies\n  injector.registerLazySingleton(() => ${pascalName}ViewModel(injector()));',
-        content.indexOf('// Features dependencies'),
       );
 
       File(injectorFile).writeAsStringSync(content);
@@ -107,9 +117,6 @@ class FeatureCommand extends BaseCommand {
   }
 
   void _showSuccessMessage(String featureName) {
-    final pen = AnsiPen()
-      ..green(bold: true)
-      ..bgBlack();
     print('\n✅ Successfully created feature "$featureName"');
     print('\n✨ The feature includes:');
     print('  ✓ Data Layer (Models, DataSources, Repositories)');
@@ -117,5 +124,10 @@ class FeatureCommand extends BaseCommand {
     print('  ✓ Presentation Layer (ViewModels, Pages, Views, Widgets)');
     print('  ✓ Automatic Route Configuration');
     print('  ✓ DI Integration');
+  }
+
+  @override
+  String formatName(String name) {
+    return ReCase(name).pascalCase;
   }
 }

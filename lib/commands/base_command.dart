@@ -1,6 +1,4 @@
-import 'dart:io'; // ← Add this line
-import 'package:ansicolor/ansicolor.dart';
-import 'package:logging/logging.dart';
+import 'dart:io';
 
 abstract class BaseCommand {
   bool validateArgs(List<String> args) {
@@ -20,7 +18,7 @@ abstract class BaseCommand {
   }
 
   bool isInteractive() {
-    return stdin.hasTerminal; // Now this works!
+    return stdin.hasTerminal;
   }
 
   /// Validates if a project name is valid according to Dart package rules

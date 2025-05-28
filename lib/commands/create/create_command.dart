@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:ansicolor/ansicolor.dart';
-import 'package:bipul_cli/utils/file_utils.dart';
 import 'package:bipul_cli/utils/template_renderer.dart';
 import 'package:bipul_cli/utils/validator.dart';
 import 'package:bipul_cli/commands/base_command.dart';
@@ -22,10 +21,9 @@ class CreateCommand extends BaseCommand {
       return;
     }
 
-    final type = parts[0]; // "project" or "feature"
-    final name = parts[1]; // "test_app" or "login"
+    final type = parts[0];
+    final name = parts[1];
 
-    // Route to appropriate handler
     switch (type) {
       case 'project':
         _createProject(name, args);
@@ -41,14 +39,11 @@ class CreateCommand extends BaseCommand {
     }
   }
 
-  void _createProject(String rawProjectName, List<String> args) {
-    // Format and validate project name
-    String projectName = formatProjectName(rawProjectName);
+  void _createProject(String projectName, List<String> args) {
+    projectName = formatProjectName(projectName);
 
     if (!Validator.isValidProjectName(projectName)) {
-      print('\n❌ Invalid project name: "$rawProjectName"');
-      print(
-          'After formatting, name became "$projectName", which is still invalid.');
+      print('\n❌ Invalid project name: "$projectName"');
       print('Project name must:');
       print('  ✓ Start with lowercase letter');
       print('  ✓ Use only lowercase letters, numbers, and underscores');
@@ -57,9 +52,8 @@ class CreateCommand extends BaseCommand {
       return;
     }
 
-    // Safely handle extra args
-    final List<String> extraArgs = args.length > 1 ? args.sublist(1) : [];
-    final Map<String, dynamic> options = _parseOptions(extraArgs);
+    final extraArgs = args.length > 1 ? args.sublist(1) : <String>[];
+    final options = _parseOptions(extraArgs);
 
     final projectPath = p.join(Directory.current.path, projectName);
 
@@ -78,7 +72,6 @@ class CreateCommand extends BaseCommand {
   }
 
   void _createFeature(String featureName, List<String> args) {
-    // Validate feature name
     if (!Validator.isValidFeatureName(featureName)) {
       print('\n❌ Invalid feature name: "$featureName"');
       print('Feature name must:');
@@ -89,7 +82,6 @@ class CreateCommand extends BaseCommand {
       return;
     }
 
-    // Find Flutter project directory
     final projectDir = _findFlutterProjectDirectory();
     if (projectDir == null) {
       print('\n❌ No Flutter project found!');
@@ -101,7 +93,6 @@ class CreateCommand extends BaseCommand {
 
     print('📁 Found Flutter project at: ${projectDir.path}');
 
-    // Check if feature already exists
     final featuresPath = p.join(projectDir.path, 'lib', 'features');
     final featurePath = p.join(featuresPath, featureName);
 
@@ -110,16 +101,14 @@ class CreateCommand extends BaseCommand {
       return;
     }
 
-    // Create the feature
     print('\n🧩 Creating feature "$featureName"...');
 
     try {
-      // Get project name from pubspec.yaml
       final projectName = _getProjectNameFromPubspec(projectDir.path);
 
       TemplateRenderer.renderFeature(
-        featureName, // Added as the first argument (template name)
-        featurePath, // Second argument (target path)
+        'feature',
+        featurePath,
         {
           'project_name': projectName,
           'ProjectName': formatName(projectName),
@@ -135,12 +124,10 @@ class CreateCommand extends BaseCommand {
   }
 
   Directory? _findFlutterProjectDirectory() {
-    // First check if current directory is a Flutter project
     if (_isInFlutterProject(Directory.current.path)) {
       return Directory.current;
     }
 
-    // If not, look for Flutter projects in current directory
     final currentDir = Directory.current;
     for (var entity in currentDir.listSync()) {
       if (entity is Directory) {
@@ -171,6 +158,7 @@ class CreateCommand extends BaseCommand {
     return match?.group(1)?.trim() ?? 'unknown_project';
   }
 
+  @override
   String formatName(String name) {
     return ReCase(name).pascalCase;
   }
@@ -182,7 +170,6 @@ class CreateCommand extends BaseCommand {
       'include_linter': null,
     };
 
-    // Parse options from command line if provided
     for (var arg in args) {
       if (arg.startsWith('--android=')) {
         final value = arg.substring('--android='.length).toLowerCase();
@@ -207,7 +194,6 @@ class CreateCommand extends BaseCommand {
   Future<void> _askConfigurationOptions(Map<String, dynamic> options) async {
     final pen = AnsiPen()..blue(bold: true);
 
-    // Ask for Android language
     if (options['android_language'] == null) {
       print('\n${pen('Android Language')}');
       print('Select your preferred language for Android:');
@@ -218,7 +204,6 @@ class CreateCommand extends BaseCommand {
       options['android_language'] = choice == '1' ? 'kotlin' : 'java';
     }
 
-    // Ask for iOS language
     if (options['ios_language'] == null) {
       print('\n${pen('iOS Language')}');
       print('Select your preferred language for iOS:');
@@ -229,7 +214,6 @@ class CreateCommand extends BaseCommand {
       options['ios_language'] = choice == '1' ? 'swift' : 'objc';
     }
 
-    // Ask about linter
     if (options['include_linter'] == null) {
       print('\n${pen('Linter')}');
       print('Would you like to include Flutter linter?');
@@ -249,11 +233,8 @@ class CreateCommand extends BaseCommand {
 
   void _createFlutterProject(
       String projectName, String projectPath, Map<String, dynamic> options) {
-    final androidLanguage =
-        options['android_language'] == 'java' ? 'java' : 'kotlin';
-    final iosLanguage = options['ios_language'] == 'objc' ? 'objc' : 'swift';
-    final orgName =
-        "com.${options['company_domain']}.${projectName.toLowerCase()}";
+    final androidLanguage = options['android_language'] ?? 'kotlin';
+    final orgName = "com.${options['company_domain']}.$projectName";
 
     print('\n🏃‍♂️ Running flutter create...');
 
@@ -268,7 +249,7 @@ class CreateCommand extends BaseCommand {
         orgName,
         '--platforms',
         'android,ios',
-        projectPath
+        projectPath,
       ],
       runInShell: true,
     );
@@ -279,7 +260,6 @@ class CreateCommand extends BaseCommand {
 
     print(flutterCreateProcess.stdout);
 
-    // Run pub get
     print('\n📦 Running flutter pub get...');
     final pubGetProcess = Process.runSync(
       'flutter',
@@ -293,33 +273,8 @@ class CreateCommand extends BaseCommand {
 
     print(pubGetProcess.stdout);
 
-    // Add linter if needed
     if (options['include_linter'] == true) {
       _addLinter(projectPath);
-    }
-  }
-
-  void _replacePlaceholdersInAllFiles(
-      String folderPath, Map<String, dynamic> context) {
-    final dir = Directory(folderPath);
-
-    if (!dir.existsSync()) return;
-
-    for (var entity in dir.listSync(recursive: true, followLinks: false)) {
-      if (entity is File &&
-          (entity.path.endsWith('.dart') || entity.path.endsWith('.yaml'))) {
-        var content = entity.readAsStringSync();
-
-        context.forEach((key, value) {
-          content = content.replaceAll('{{$key}}', '$value');
-          content = content.replaceAll(
-              '{{${key}_snake}}', ReCase('$value').snakeCase);
-          content = content.replaceAll(
-              '{{${key}_pascal}}', ReCase('$value').pascalCase);
-        });
-
-        entity.writeAsStringSync(content);
-      }
     }
   }
 
@@ -329,14 +284,12 @@ class CreateCommand extends BaseCommand {
 
     final projectLibPath = p.join(projectPath, 'lib');
 
-    // Delete default lib content
     final libDir = Directory(projectLibPath);
     if (libDir.existsSync()) {
       libDir.deleteSync(recursive: true);
     }
     libDir.createSync();
 
-    // Copy full architecture structure from template
     final templateLibDir = Directory('lib/templates/project/lib');
 
     if (templateLibDir.existsSync()) {
@@ -344,22 +297,20 @@ class CreateCommand extends BaseCommand {
       TemplateRenderer.renderProjectTemplates(projectLibPath, {
         'project_name': projectName,
         'ProjectName': formatName(projectName),
-        'android_language': options['android_language'],
-        'ios_language': options['ios_language'],
-        'include_linter': options['include_linter'] == true ? true : false,
+        'android_language': options['android_language'] ?? 'kotlin',
+        'ios_language': options['ios_language'] ?? 'swift',
+        'include_linter': options['include_linter'] == true,
       });
     } else {
-      throw Exception(
-          'Template not found at $templateLibDir\nPlease make sure the template folder exists with all required files');
+      throw Exception('Template not found at $templateLibDir');
     }
 
-    // Create home feature last
     final featurePath = p.join(projectPath, 'lib', 'features', 'home');
 
     print('\n🧩 Generating feature "home"...');
     TemplateRenderer.renderFeature(
-      'home', // Added as the first argument (template name)
-      featurePath, // Second argument (target path)
+      'home',
+      featurePath,
       {
         'project_name': projectName,
         'ProjectName': formatName(projectName),
@@ -384,7 +335,6 @@ class CreateCommand extends BaseCommand {
 
     pubspecFile.writeAsStringSync(content);
 
-    // Add analysis_options.yaml
     final analysisOptions = '''
 include: package:flutter_lints/flutter.yaml
 
@@ -397,7 +347,6 @@ analyzer:
     File(p.join(projectPath, 'analysis_options.yaml'))
         .writeAsStringSync(analysisOptions);
 
-    // Run pub add for flutter_lints
     final pubAddProcess = Process.runSync(
       'flutter',
       ['pub', 'add', 'flutter_lints'],
@@ -409,7 +358,6 @@ analyzer:
 
   void _showSuccessMessage(
       String projectName, String projectPath, Map<String, dynamic> options) {
-    final pen = AnsiPen()..green(bold: true);
     print('\n✅ Successfully created Flutter project "$projectName"');
     print('\n👉 Next steps:');
     print('  cd $projectName');
@@ -419,8 +367,10 @@ analyzer:
     print('  ✓ DRY & SOLID Principles');
     print('  ✓ Scalable Feature Organization');
     print('  ✓ Home Feature Pre-Installed');
-    print('  ✓ Android language: ${options['android_language'].toUpperCase()}');
-    print('  ✓ iOS language: ${options['ios_language'].toUpperCase()}');
+    print(
+        '  ✓ Android language: ${(options['android_language'] ?? 'kotlin').toUpperCase()}');
+    print(
+        '  ✓ iOS language: ${(options['ios_language'] ?? 'swift').toUpperCase()}');
     print(
         '  ✓ Linter: ${options['include_linter'] ? 'Included' : 'Not included'}');
     print('  ✓ Created using official flutter create');
@@ -428,7 +378,6 @@ analyzer:
   }
 
   void _showFeatureSuccessMessage(String featureName, [String? projectPath]) {
-    final pen = AnsiPen()..green(bold: true);
     print('\n✅ Successfully created feature "$featureName"');
     if (projectPath != null) {
       print('📍 Location: $projectPath/lib/features/$featureName');
@@ -468,15 +417,14 @@ Examples:
 ''');
   }
 
-  String formatProjectName(String rawName) {
-    // Replace invalid characters and ensure lowercase
-    String formatted = rawName
+  @override
+  String formatProjectName(String name) {
+    String formatted = name
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
         .replaceAll(RegExp(r'_+'), '_')
         .trim();
 
-    // Ensure it starts with a letter
     if (formatted.isNotEmpty && !RegExp(r'^[a-z]').hasMatch(formatted)) {
       formatted = 'app_$formatted';
     }
