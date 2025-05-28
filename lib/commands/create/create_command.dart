@@ -23,15 +23,25 @@ class CreateCommand extends BaseCommand {
     }
 
     final type = parts[0]; // "project" or "feature"
-    String rawProjectName = parts[1]; // "test_app"
+    final name = parts[1]; // "test_app" or "login"
 
-    // Only "project" type is supported for now
-    if (type != 'project') {
-      print('\n❌ Only "project" type is currently supported!');
-      _showUsage();
-      return;
+    // Route to appropriate handler
+    switch (type) {
+      case 'project':
+        _createProject(name, args);
+        break;
+      case 'feature':
+        _createFeature(name, args);
+        break;
+      default:
+        print('\n❌ Unsupported type: "$type"');
+        print('Supported types: project, feature');
+        _showUsage();
+        return;
     }
+  }
 
+  void _createProject(String rawProjectName, List<String> args) {
     // Format and validate project name
     String projectName = formatProjectName(rawProjectName);
 
@@ -67,6 +77,104 @@ class CreateCommand extends BaseCommand {
     _showSuccessMessage(projectName, projectPath, options);
   }
 
+  void _createFeature(String featureName, List<String> args) {
+    // Validate feature name
+    if (!Validator.isValidFeatureName(featureName)) {
+      print('\n❌ Invalid feature name: "$featureName"');
+      print('Feature name must:');
+      print('  ✓ Start with lowercase letter');
+      print('  ✓ Use only lowercase letters, numbers, and underscores');
+      print('  ✓ Not contain special characters or spaces');
+      print('Example: bipul create feature:user_profile');
+      return;
+    }
+
+    // Find Flutter project directory
+    final projectDir = _findFlutterProjectDirectory();
+    if (projectDir == null) {
+      print('\n❌ No Flutter project found!');
+      print('Please run this command from:');
+      print('  1. Inside a Flutter project directory, or');
+      print('  2. From the bipul_cli directory with Flutter projects nearby');
+      return;
+    }
+
+    print('📁 Found Flutter project at: ${projectDir.path}');
+
+    // Check if feature already exists
+    final featuresPath = p.join(projectDir.path, 'lib', 'features');
+    final featurePath = p.join(featuresPath, featureName);
+
+    if (Directory(featurePath).existsSync()) {
+      print('\n❌ Feature "$featureName" already exists!');
+      return;
+    }
+
+    // Create the feature
+    print('\n🧩 Creating feature "$featureName"...');
+
+    try {
+      // Get project name from pubspec.yaml
+      final projectName = _getProjectNameFromPubspec(projectDir.path);
+
+      TemplateRenderer.renderFeature(
+        featureName, // Added as the first argument (template name)
+        featurePath, // Second argument (target path)
+        {
+          'project_name': projectName,
+          'ProjectName': formatName(projectName),
+          'feature_name': featureName,
+          'FeatureName': formatName(featureName),
+        },
+      );
+
+      _showFeatureSuccessMessage(featureName, projectDir.path);
+    } catch (e) {
+      print('\n❌ Failed to create feature: $e');
+    }
+  }
+
+  Directory? _findFlutterProjectDirectory() {
+    // First check if current directory is a Flutter project
+    if (_isInFlutterProject(Directory.current.path)) {
+      return Directory.current;
+    }
+
+    // If not, look for Flutter projects in current directory
+    final currentDir = Directory.current;
+    for (var entity in currentDir.listSync()) {
+      if (entity is Directory) {
+        if (_isInFlutterProject(entity.path)) {
+          return entity;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  bool _isInFlutterProject([String? path]) {
+    final targetPath = path ?? Directory.current.path;
+    final pubspecFile = File(p.join(targetPath, 'pubspec.yaml'));
+    if (!pubspecFile.existsSync()) return false;
+
+    final content = pubspecFile.readAsStringSync();
+    return content.contains('flutter:') && content.contains('sdk: flutter');
+  }
+
+  String _getProjectNameFromPubspec([String? projectPath]) {
+    final targetPath = projectPath ?? Directory.current.path;
+    final pubspecFile = File(p.join(targetPath, 'pubspec.yaml'));
+    final content = pubspecFile.readAsStringSync();
+    final nameRegex = RegExp(r'^name:\s*(.+)$', multiLine: true);
+    final match = nameRegex.firstMatch(content);
+    return match?.group(1)?.trim() ?? 'unknown_project';
+  }
+
+  String formatName(String name) {
+    return ReCase(name).pascalCase;
+  }
+
   Map<String, dynamic> _parseOptions(List<String> args) {
     final options = <String, dynamic>{
       'android_language': null,
@@ -76,7 +184,6 @@ class CreateCommand extends BaseCommand {
 
     // Parse options from command line if provided
     for (var arg in args) {
-      // ← We changed this loop to use the safe args
       if (arg.startsWith('--android=')) {
         final value = arg.substring('--android='.length).toLowerCase();
         if (value == 'java' || value == 'kotlin') {
@@ -192,25 +299,6 @@ class CreateCommand extends BaseCommand {
     }
   }
 
-  // void _replacePlaceholdersInAllFiles(String folderPath, Map<String, dynamic> context) {
-  //   final dir = Directory(folderPath);
-  //
-  //   if (!dir.existsSync()) return;
-  //
-  //   for (var entity in dir.listSync(recursive: true, followLinks: false)) {
-  //     if (entity is File && (entity.path.endsWith('.dart') || entity.path.endsWith('.yaml'))) {
-  //       var content = entity.readAsStringSync();
-  //
-  //       context.forEach((key, value) {
-  //         content = content.replaceAll('{{$key}}', '$value');
-  //         content = content.replaceAll('{{${key}_snake}}', ReCase('$value').snakeCase);
-  //         content = content.replaceAll('{{${key}_pascal}}', ReCase('$value').pascalCase);
-  //       });
-  //
-  //       entity.writeAsStringSync(content);
-  //     }
-  //   }
-  // }
   void _replacePlaceholdersInAllFiles(
       String folderPath, Map<String, dynamic> context) {
     final dir = Directory(folderPath);
@@ -265,20 +353,20 @@ class CreateCommand extends BaseCommand {
           'Template not found at $templateLibDir\nPlease make sure the template folder exists with all required files');
     }
 
-    // Create home feature
-    //   final featurePath = p.join(projectPath, 'lib', 'features', 'home');
-    //   TemplateRenderer.renderFeature('home', featurePath);
-
     // Create home feature last
     final featurePath = p.join(projectPath, 'lib', 'features', 'home');
 
     print('\n🧩 Generating feature "home"...');
-    TemplateRenderer.renderFeature('home', featurePath, {
-      'project_name': projectName,
-      'ProjectName': formatName(projectName),
-      'feature_name': 'home',
-      'FeatureName': 'Home',
-    });
+    TemplateRenderer.renderFeature(
+      'home', // Added as the first argument (template name)
+      featurePath, // Second argument (target path)
+      {
+        'project_name': projectName,
+        'ProjectName': formatName(projectName),
+        'feature_name': 'home',
+        'FeatureName': 'Home',
+      },
+    );
   }
 
   void _addLinter(String projectPath) {
@@ -339,15 +427,60 @@ analyzer:
     print('  ✓ Fully compatible with Flutter ecosystem');
   }
 
+  void _showFeatureSuccessMessage(String featureName, [String? projectPath]) {
+    final pen = AnsiPen()..green(bold: true);
+    print('\n✅ Successfully created feature "$featureName"');
+    if (projectPath != null) {
+      print('📍 Location: $projectPath/lib/features/$featureName');
+    }
+    print('\n📁 Created files:');
+    print('  lib/features/$featureName/');
+    print('    ├── data/');
+    print('    │   ├── datasources/');
+    print('    │   ├── models/');
+    print('    │   └── repositories/');
+    print('    ├── domain/');
+    print('    │   ├── entities/');
+    print('    │   ├── repositories/');
+    print('    │   └── usecases/');
+    print('    └── presentation/');
+    print('        ├── bloc/');
+    print('        ├── pages/');
+    print('        └── widgets/');
+    print('\n👉 Next steps:');
+    print('  1. Implement your feature logic in the generated files');
+    print('  2. Add your feature route to the app router');
+    print('  3. Import and use your feature widgets/pages');
+  }
+
   void _showUsage() {
     final pen = AnsiPen()..red(bold: true);
     print('\n${pen('ERROR')}: Invalid create command format');
     print('''
 Usage:
-  bipul create project:project_name
+  bipul create project:project_name     Create a new Flutter project
+  bipul create feature:feature_name     Create a new feature in existing project
 
-Example:
+Examples:
   bipul create project:my_cool_app
+  bipul create feature:login
+  bipul create feature:user_profile
 ''');
+  }
+
+  String formatProjectName(String rawName) {
+    // Replace invalid characters and ensure lowercase
+    String formatted = rawName
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
+        .trim();
+
+    // Ensure it starts with a letter
+    if (formatted.isNotEmpty && !RegExp(r'^[a-z]').hasMatch(formatted)) {
+      formatted = 'app_$formatted';
+    }
+
+    return formatted.isEmpty ? 'my_app' : formatted;
   }
 }

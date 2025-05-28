@@ -7,6 +7,7 @@ import 'package:bipul_cli/utils/file_utils.dart';
 import 'package:bipul_cli/utils/template_renderer.dart';
 import 'package:bipul_cli/utils/validator.dart';
 import 'package:bipul_cli/commands/base_command.dart';
+import 'package:recase/recase.dart';
 
 class ProjectCommand extends BaseCommand {
   final String templatePath = 'lib/templates/project';
@@ -62,11 +63,13 @@ class ProjectCommand extends BaseCommand {
   }
 
   Future<void> _askConfigurationOptions(Map<String, dynamic> options) async {
-    final pen = AnsiPen()..blue(bold: true)..bgBlack();
+    final pen = AnsiPen()
+      ..blue(bold: true)
+      ..bgBlack();
 
     // Ask for Android language
     if (options['android_language'] == null) {
-      print('\n${pen('Android Language')}');
+      print('\n${pen("Android Language")}');
       print('Select your preferred language for Android:');
       print('1. Kotlin (recommended)');
       print('2. Java');
@@ -77,7 +80,7 @@ class ProjectCommand extends BaseCommand {
 
     // Ask for iOS language
     if (options['ios_language'] == null) {
-      print('\n${pen('iOS Language')}');
+      print('\n${pen("iOS Language")}');
       print('Select your preferred language for iOS:');
       print('1. Swift (recommended)');
       print('2. Objective-C');
@@ -88,8 +91,8 @@ class ProjectCommand extends BaseCommand {
 
     // Ask about linter
     if (options['include_linter'] == null) {
-      print('\n${pen('Linter')}`);
-          print('Would you like to include Flutter linter?');
+      print('\n${pen("Linter")}');
+      print('Would you like to include Flutter linter?');
       print('1. Yes (recommended)');
       print('2. No');
 
@@ -98,7 +101,8 @@ class ProjectCommand extends BaseCommand {
     }
   }
 
-  void _createProject(String projectName, String projectPath, Map<String, dynamic> options) {
+  void _createProject(
+      String projectName, String projectPath, Map<String, dynamic> options) {
     final templateDir = Directory(templatePath);
     if (!templateDir.existsSync()) {
       throw Exception('Template directory not found at $templatePath');
@@ -114,7 +118,8 @@ class ProjectCommand extends BaseCommand {
     _configureLinter(projectPath, options);
   }
 
-  void _replacePlaceholders(String projectPath, String projectName, Map<String, dynamic> options) {
+  void _replacePlaceholders(
+      String projectPath, String projectName, Map<String, dynamic> options) {
     final filesToProcess = [
       p.join(projectPath, 'pubspec.yaml'),
       p.join(projectPath, 'lib', 'main.dart'),
@@ -135,7 +140,8 @@ class ProjectCommand extends BaseCommand {
     }
   }
 
-  void _configurePlatformLanguages(String projectPath, Map<String, dynamic> options) {
+  void _configurePlatformLanguages(
+      String projectPath, Map<String, dynamic> options) {
     // Remove unwanted platform languages
     final androidPath = p.join(projectPath, 'android');
     final iosPath = p.join(projectPath, 'ios');
@@ -193,8 +199,7 @@ class ProjectCommand extends BaseCommand {
         content = content.replaceFirst(
             'dev_dependencies:',
             'dev_dependencies:\n  flutter_lints: ^2.0.0',
-            content.indexOf('dev_dependencies:')
-        );
+            content.indexOf('dev_dependencies:'));
       }
 
       // Add analysis_options.yaml
@@ -211,7 +216,8 @@ analyzer:
           .writeAsStringSync(analysisOptions);
     } else {
       // Remove flutter_lints if present
-      content = content.replaceAll(RegExp(r'\s+flutter_lints: ^.*$', multiLine: true), '');
+      content = content.replaceAll(
+          RegExp(r'\s+flutter_lints: ^.*$', multiLine: true), '');
 
       // Remove analysis_options.yaml if exists
       final analysisFile = File(p.join(projectPath, 'analysis_options.yaml'));
@@ -228,11 +234,23 @@ analyzer:
     Directory(featurePath).createSync(recursive: true);
 
     // Generate home feature files from templates
-    TemplateRenderer.renderFeature('home', featurePath);
+    TemplateRenderer.renderFeature(
+      'home',
+      featurePath,
+      {
+        'project_name': projectName,
+        'ProjectName': formatName(projectName),
+        'feature_name': 'home',
+        'FeatureName': 'Home',
+      },
+    );
   }
 
-  void _showSuccessMessage(String projectName, String projectPath, Map<String, dynamic> options) {
-    final pen = AnsiPen()..green(bold: true)..bgBlack();
+  void _showSuccessMessage(
+      String projectName, String projectPath, Map<String, dynamic> options) {
+    final pen = AnsiPen()
+      ..green(bold: true)
+      ..bgBlack();
     print('\n✅ Successfully created Flutter project "$projectName"');
     print('\n👉 Next steps:');
     print('  cd $projectName');
@@ -244,6 +262,11 @@ analyzer:
     print('  ✓ Home Feature Pre-Installed');
     print('  ✓ Android language: ${options['android_language'].toUpperCase()}');
     print('  ✓ iOS language: ${options['ios_language'].toUpperCase()}');
-    print('  ✓ Linter: ${options['include_linter'] ? 'Included' : 'Not included'}');
+    print(
+        '  ✓ Linter: ${options['include_linter'] ? 'Included' : 'Not included'}');
+  }
+
+  String formatName(String name) {
+    return ReCase(name).pascalCase;
   }
 }
