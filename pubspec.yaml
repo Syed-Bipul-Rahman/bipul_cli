@@ -19,10 +19,6 @@ dependencies:
   ansicolor: ^2.0.1
   logging: ^1.2.0
 
-flutter:
-  assets:
-    - lib/templates/
-
 dev_dependencies:
   test: ^1.24.0
   lints: ^2.0.0
