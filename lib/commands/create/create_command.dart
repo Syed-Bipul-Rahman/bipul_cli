@@ -9,7 +9,10 @@ import 'package:recase/recase.dart';
 class CreateCommand extends BaseCommand {
   final String templatePath = 'lib/templates/project';
 
-  void run(List<String> args) {
+  Future<void> run(List<String> args) async {
+    print('📥 Preparing Bipul Templates...');
+    await TemplateDownloader.ensureTemplatesExist();
+
     if (args.isEmpty || !args[0].contains(':')) {
       _showUsage();
       return;
@@ -106,8 +109,11 @@ class CreateCommand extends BaseCommand {
     try {
       final projectName = _getProjectNameFromPubspec(projectDir.path);
 
-      TemplateRenderer.renderFeature(
-        'feature',
+      // Fixed: Use renderAllTemplates instead of renderFeature
+      final featureTemplateDir = 'lib/templates/project/lib/features/home'; // Use home as template
+
+      TemplateRenderer.renderAllTemplates(
+        featureTemplateDir,
         featurePath,
         {
           'project_name': projectName,
@@ -192,7 +198,8 @@ class CreateCommand extends BaseCommand {
   }
 
   Future<void> _askConfigurationOptions(Map<String, dynamic> options) async {
-    final pen = AnsiPen()..blue(bold: true);
+    final pen = AnsiPen()
+      ..blue(bold: true);
 
     if (options['android_language'] == null) {
       print('\n${pen('Android Language')}');
@@ -231,8 +238,8 @@ class CreateCommand extends BaseCommand {
     return domain;
   }
 
-  void _createFlutterProject(
-      String projectName, String projectPath, Map<String, dynamic> options) {
+  void _createFlutterProject(String projectName, String projectPath,
+      Map<String, dynamic> options) {
     final androidLanguage = options['android_language'] ?? 'kotlin';
     final orgName = "com.${options['company_domain']}.$projectName";
 
@@ -278,39 +285,38 @@ class CreateCommand extends BaseCommand {
     }
   }
 
-  void _applyBipulStructure(
-      String projectPath, String projectName, Map<String, dynamic> options) {
+
+  void _applyBipulStructure(String projectPath, String projectName, Map<String, dynamic> options) {
     print('\n🏗️ Applying Bipul Architecture...');
 
     final projectLibPath = p.join(projectPath, 'lib');
+    final templatesProjectDir = Directory('lib/templates/project/lib');
 
-    final libDir = Directory(projectLibPath);
-    if (libDir.existsSync()) {
-      libDir.deleteSync(recursive: true);
+    if (!templatesProjectDir.existsSync()) {
+      throw Exception("Cloned templates not found at ${templatesProjectDir.path}");
     }
-    libDir.createSync();
 
-    final templateLibDir = Directory('lib/templates/project/lib');
-
-    if (templateLibDir.existsSync()) {
-      print('📦 Rendering template files...');
-      TemplateRenderer.renderProjectTemplates(projectLibPath, {
+    // Copy and render all `.mustache` files in lib/
+    TemplateRenderer.renderAllTemplates(
+      templatesProjectDir.path,
+      projectLibPath,
+      {
         'project_name': projectName,
         'ProjectName': formatName(projectName),
         'android_language': options['android_language'] ?? 'kotlin',
         'ios_language': options['ios_language'] ?? 'swift',
-        'include_linter': options['include_linter'] == true,
-      });
-    } else {
-      throw Exception('Template not found at $templateLibDir');
-    }
+        'include_linter': options['include_linter'] == true ? true : false,
+      },
+    );
 
-    final featurePath = p.join(projectPath, 'lib', 'features', 'home');
+    // Generate home feature
+    final featureSourceDir = 'lib/templates/project/lib/features/home';
+    final featureTargetDir = p.join(projectPath, 'lib', 'features', 'home');
 
     print('\n🧩 Generating feature "home"...');
-    TemplateRenderer.renderFeature(
-      'home',
-      featurePath,
+    TemplateRenderer.renderAllTemplates(
+      featureSourceDir,
+      featureTargetDir,
       {
         'project_name': projectName,
         'ProjectName': formatName(projectName),
@@ -319,6 +325,7 @@ class CreateCommand extends BaseCommand {
       },
     );
   }
+
 
   void _addLinter(String projectPath) {
     print('\n🧼 Adding Flutter Linter...');
@@ -356,8 +363,8 @@ analyzer:
     print(pubAddProcess.stdout);
   }
 
-  void _showSuccessMessage(
-      String projectName, String projectPath, Map<String, dynamic> options) {
+  void _showSuccessMessage(String projectName, String projectPath,
+      Map<String, dynamic> options) {
     print('\n✅ Successfully created Flutter project "$projectName"');
     print('\n👉 Next steps:');
     print('  cd $projectName');
@@ -368,11 +375,15 @@ analyzer:
     print('  ✓ Scalable Feature Organization');
     print('  ✓ Home Feature Pre-Installed');
     print(
-        '  ✓ Android language: ${(options['android_language'] ?? 'kotlin').toUpperCase()}');
+        '  ✓ Android language: ${(options['android_language'] ?? 'kotlin')
+            .toUpperCase()}');
     print(
-        '  ✓ iOS language: ${(options['ios_language'] ?? 'swift').toUpperCase()}');
+        '  ✓ iOS language: ${(options['ios_language'] ?? 'swift')
+            .toUpperCase()}');
     print(
-        '  ✓ Linter: ${options['include_linter'] ? 'Included' : 'Not included'}');
+        '  ✓ Linter: ${options['include_linter']
+            ? 'Included'
+            : 'Not included'}');
     print('  ✓ Created using official flutter create');
     print('  ✓ Fully compatible with Flutter ecosystem');
   }
@@ -403,7 +414,8 @@ analyzer:
   }
 
   void _showUsage() {
-    final pen = AnsiPen()..red(bold: true);
+    final pen = AnsiPen()
+      ..red(bold: true);
     print('\n${pen('ERROR')}: Invalid create command format');
     print('''
 Usage:

@@ -1,17 +1,65 @@
 import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart.mustache';
+import 'home_model.dart';
+import 'image_placeholder.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class LazyLoadingList extends StatefulWidget {
+final List<HomeModel> items;
+    final VoidCallback onLoadMore;
+    final Future<void> Function() onRefresh;
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
-}
+        const LazyLoadingList({
+        super.key,
+        required this.items,
+        required this.onLoadMore,
+        required this.onRefresh,
+        });
+
+        @override
+        _LazyLoadingListState createState() => _LazyLoadingListState();
+        }
+
+        class _LazyLoadingListState extends State<LazyLoadingList> {
+            final ScrollController _scrollController = ScrollController();
+
+            @override
+            void initState() {
+            super.initState();
+            _scrollController.addListener(() {
+            if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200) {
+            widget.onLoadMore();
+            }
+            });
+            }
+
+            @override
+            void dispose() {
+            _scrollController.dispose();
+            super.dispose();
+            }
+
+            @override
+            Widget build(BuildContext context) {
+            return RefreshIndicator(
+            onRefresh: widget.onRefresh,
+            child: ListView.builder(
+            controller: _scrollController,
+            itemCount: widget.items.length + 1,
+            itemBuilder: (context, index) {
+            if (index == widget.items.length) {
+            return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator()),
+            );
+            }
+            final item = widget.items[index];
+            return ListTile(
+            leading: const ImagePlaceholder(width: 50, height: 50),
+            title: Text(item.title),
+            subtitle: Text(item.description),
+            );
+            },
+            ),
+            );
+            }
+            }

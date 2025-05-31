@@ -1,17 +1,41 @@
-import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart.mustache';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'home_model.dart';
+import 'home_repository.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class PaginationProvider extends StateNotifier<List<HomeModel>> {
+    final HomeRepository repository;
+    int _currentPage = 1;
+    final int _limit = 10;
+    bool _isLoading = false;
+    bool _hasMore = true;
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
-}
+    PaginationProvider(this.repository) : super([]);
+
+    Future<void> fetchItems({bool isRefresh = false}) async {
+        if (_isLoading || !_hasMore) return;
+
+        _isLoading = true;
+        if (isRefresh) {
+        _currentPage = 1;
+        state = [];
+        }
+
+        try {
+        final newItems = await repository.getItems(_currentPage, _limit);
+        if (newItems.length < _limit) {
+        _hasMore = false;
+        }
+        state = [...state, ...newItems];
+        _currentPage++;
+        } catch (e) {
+        // Handle error (e.g., show a snackbar in the UI)
+        print('Error fetching items: $e');
+        } finally {
+        _isLoading = false;
+        }
+        }
+        }
+
+        final paginationProvider = StateNotifierProvider<PaginationProvider, List<HomeModel>>(
+            (ref) => PaginationProvider(ref.read(homeRepositoryProvider)),
+            );

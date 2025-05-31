@@ -1,0 +1,39 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'get_home_items.dart';
+import 'home_model.dart';
+
+class HomeViewModel extends StateNotifier<AsyncValue<List<HomeModel>>> {
+    final GetHomeItems getHomeItems;
+    int _currentPage = 1;
+    final int _limit = 10;
+
+    HomeViewModel(this.getHomeItems) : super(const AsyncValue.data([]));
+
+    Future<void> fetchItems({bool isRefresh = false}) async {
+        if (state.isLoading) return;
+
+        if (isRefresh) {
+        _currentPage = 1;
+        state = const AsyncValue.data([]);
+        }
+
+        state = const AsyncValue.loading();
+        final result = await getHomeItems(_currentPage, _limit);
+
+        result.fold(
+        (failure) => state = AsyncValue.error(failure, StackTrace.current),
+        (items) {
+        state = AsyncValue.data([...state.value ?? [], ...items]);
+        _currentPage++;
+        },
+        );
+        }
+        }
+
+        final homeViewModelProvider = StateNotifierProvider<HomeViewModel, AsyncValue<List<HomeModel>>>(
+            (ref) => HomeViewModel(ref.read(getHomeItemsProvider)),
+            );
+
+            final getHomeItemsProvider = Provider<GetHomeItems>(
+                (ref) => GetHomeItems(ref.read(homeRepositoryProvider)),
+                );

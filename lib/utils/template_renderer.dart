@@ -1,79 +1,66 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:mustache_template/mustache_template.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
+import 'package:process/process.dart';
 
 class TemplateRenderer {
-  /// Renders the full project architecture from templates
-  static void renderProjectTemplates(
-      String projectPath, Map<String, dynamic> context) {
-    final templateDir = Directory('lib/templates/project/lib');
+  /// Renders all .mustache files in a folder using context
+  static void renderAllTemplates(String sourcePath, String targetPath, Map<String, dynamic> context) {
+    final templateDir = Directory(sourcePath);
+    final outputDir = Directory(targetPath)..createSync(recursive: true);
 
     if (!templateDir.existsSync()) {
-      throw Exception("Project templates not found at ${templateDir.path}");
+      throw Exception("Template folder not found at $sourcePath");
     }
 
-    print('📦 Rendering project templates...');
+    print('🧩 Rendering templates from $sourcePath → $targetPath');
 
     for (var entity in templateDir.listSync(recursive: true)) {
-      // Skip home feature while rendering project
-      if (entity.path.contains(p.join('features', 'home'))) continue;
-
       if (entity is File && entity.path.endsWith('.mustache')) {
-        final relativePath = p.relative(entity.path, from: templateDir.path);
-        final targetPath =
-            p.join(projectPath, relativePath.replaceAll('.mustache', ''));
-
-        final targetFile = File(targetPath)..parent.createSync(recursive: true);
+        final relativePath = p.relative(entity.path, from: sourcePath);
+        final targetFile = File(p.join(targetPath, relativePath.replaceAll('.mustache', '')))
+          ..parent.createSync(recursive: true);
 
         try {
-          final templateContent = entity.readAsStringSync();
-          final template = Template(templateContent);
+          final template = Template(entity.readAsStringSync());
           final rendered = template.renderString(context);
 
           targetFile.writeAsStringSync(rendered);
-          print('📄 Created: $relativePath → ${p.basename(targetPath)}');
+          print('📄 Created: $relativePath → ${p.basename(targetFile.path)}');
         } catch (e) {
           print('❌ Failed to render $relativePath: $e');
         }
       }
     }
   }
+}
 
-  /// Renders a new feature inside an existing project
-  static void renderFeature(
-    String featureName,
-    String featurePath,
-    Map<String, dynamic> context,
-  ) {
-    final templateDir = Directory(
-        p.join('lib', 'templates', 'project', 'lib', 'features', featureName));
+class TemplateDownloader {
+  static Future<void> ensureTemplatesExist() async {
+    final templatesDir = Directory('lib/templates');
 
-    if (!templateDir.existsSync()) {
-      throw Exception("Feature templates not found at $templateDir");
+    if (templatesDir.existsSync()) {
+      print('🗑️ Removing old templates...');
+      templatesDir.deleteSync(recursive: true);
     }
 
-    print('🧩 Generating feature "$featureName"...');
+    print('📥 Downloading latest templates...');
+    final result = await Process.run(
+      'git',
+      [
+        'clone',
+        'https://github.com/Syed-Bipul-Rahman/bipul_templates.git',
+        'lib/templates'
+      ],
+      runInShell: true,
+    );
 
-    for (var entity in templateDir.listSync(recursive: true)) {
-      if (entity is File && entity.path.endsWith('.mustache')) {
-        final relativePath = p.relative(entity.path, from: templateDir.path);
-        final targetPath =
-            p.join(featurePath, relativePath.replaceAll('.mustache', ''));
-
-        final targetFile = File(targetPath)..parent.createSync(recursive: true);
-
-        try {
-          final templateContent = entity.readAsStringSync();
-          final template = Template(templateContent);
-          final rendered = template.renderString(context);
-
-          targetFile.writeAsStringSync(rendered);
-        } catch (e) {
-          print('❌ Failed to render $relativePath: $e');
-        }
-      }
+    if (result.exitCode != 0) {
+      throw Exception('Failed to download templates:\n${result.stderr}');
     }
 
-    print('✅ Feature "$featureName" generated successfully');
+    print('✅ Templates downloaded successfully!');
   }
 }

@@ -1,17 +1,28 @@
-import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart.mustache';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'home_model.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+abstract class HomeRemoteDataSource {
+Future<List<HomeModel>> getItems(int page, int limit);
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
-}
+    class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
+    final http.Client client;
+    static const String baseUrl = 'https://api.example.com/items';
+
+    HomeRemoteDataSourceImpl({required this.client});
+
+    @override
+    Future<List<HomeModel>> getItems(int page, int limit) async {
+        final response = await client.get(
+        Uri.parse('$baseUrl?page=$page&limit=$limit'),
+        );
+
+        if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+            return data.map((json) => HomeModel.fromJson(json)).toList();
+            } else {
+            throw Exception('Failed to load items');
+            }
+            }
+            }

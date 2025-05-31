@@ -1,17 +1,20 @@
-import 'package:flutter/material.dart';
-import 'package:{{project_name}}/core/constants/app_constants.dart.mustache';
+abstract class HomeLocalDataSource {
+Future<List<HomeModel>> getCachedItems();
+    Future<void> cacheItems(List<HomeModel> items);
+        }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+        class HomeLocalDataSourceImpl implements HomeLocalDataSource {
+        // Simulated local storage (e.g., SharedPreferences, Hive, or SQLite)
+        final List<HomeModel> _cache = [];
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
-}
+            @override
+            Future<List<HomeModel>> getCachedItems() async {
+                return _cache;
+                }
+
+                @override
+                Future<void> cacheItems(List<HomeModel> items) async {
+                    _cache.clear();
+                    _cache.addAll(items);
+                    }
+                    }

@@ -1,0 +1,21 @@
+import 'package:flutter/material.dart';
+import 'home_model.dart';
+import 'image_placeholder.dart';
+
+class ItemCard extends StatelessWidget {
+final HomeModel item;
+
+const ItemCard({super.key, required this.item});
+
+@override
+Widget build(BuildContext context) {
+return Card(
+margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+child: ListTile(
+leading: const ImagePlaceholder(width: 50, height: 50),
+title: Text(item.title),
+subtitle: Text(item.description),
+),
+);
+}
+}
