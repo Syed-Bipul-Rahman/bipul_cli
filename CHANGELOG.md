@@ -1,7 +1,11 @@
 # Changelog
 
+## 1.0.0
+- Include create clean architecture
+- Include create features
+
 ## 0.1.1
-- include template
+- Include template
 
 ## 0.1.0
 - Initial release

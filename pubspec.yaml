@@ -18,7 +18,7 @@ dependencies:
   mustache_template: ^2.0.0
   ansicolor: ^2.0.1
   logging: ^1.2.0
-  process:
+  process: ^5.0.4
 
 dev_dependencies:
   test: ^1.24.0

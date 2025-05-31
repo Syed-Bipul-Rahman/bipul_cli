@@ -51,7 +51,7 @@ class FeatureCommand extends BaseCommand {
       Directory(dir).createSync();
     }
 
-   // final pubspecFile = File(p.join(projectPath, 'pubspec.yaml'));
+    // final pubspecFile = File(p.join(projectPath, 'pubspec.yaml'));
     // final projectName = pubspecFile.existsSync()
     //     ? (RegExp(r'^name:\s*(.+)$', multiLine: true)
     //             .firstMatch(pubspecFile.readAsStringSync())
@@ -59,8 +59,6 @@ class FeatureCommand extends BaseCommand {
     //             ?.trim() ??
     //         'my_app')
     //     : 'my_app';
-
-
   }
 
   void _updateRoutes(String projectPath, String featureName) {
