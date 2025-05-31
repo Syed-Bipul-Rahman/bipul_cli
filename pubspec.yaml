@@ -1,12 +1,12 @@
 name: bipul_cli
 description: A powerful yet simple CLI for generating Flutter projects and features with a clean, scalable architecture following DRY and SOLID principles.
-version: 0.1.1
+version: 1.0.0
 homepage: https://github.com/Syed-Bipul-Rahman/bipul_cli
 repository: https://github.com/Syed-Bipul-Rahman/bipul_cli
 issue_tracker: https://github.com/Syed-Bipul-Rahman/bipul_cli/issues
 # maintainers:
 #   - name: Syed Bipul Rahman
-#     email: info@syedbbipul.me
+#     email: info@syedbipul.me
 
 environment:
   sdk: '>=2.19.0 <4.0.0'
@@ -22,7 +22,7 @@ dependencies:
 
 dev_dependencies:
   test: ^1.24.0
-  lints: ^2.0.0
+  lints: ^5.1.1
 
 executables:
   bipul: main

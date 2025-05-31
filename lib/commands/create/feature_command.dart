@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
-import 'package:bipul_cli/utils/template_renderer.dart';
 import 'package:bipul_cli/commands/base_command.dart';
 import 'package:bipul_cli/utils/validator.dart';
 import 'package:recase/recase.dart';
@@ -52,25 +51,16 @@ class FeatureCommand extends BaseCommand {
       Directory(dir).createSync();
     }
 
-    final pubspecFile = File(p.join(projectPath, 'pubspec.yaml'));
-    final projectName = pubspecFile.existsSync()
-        ? (RegExp(r'^name:\s*(.+)$', multiLine: true)
-                .firstMatch(pubspecFile.readAsStringSync())
-                ?.group(1)
-                ?.trim() ??
-            'my_app')
-        : 'my_app';
+   // final pubspecFile = File(p.join(projectPath, 'pubspec.yaml'));
+    // final projectName = pubspecFile.existsSync()
+    //     ? (RegExp(r'^name:\s*(.+)$', multiLine: true)
+    //             .firstMatch(pubspecFile.readAsStringSync())
+    //             ?.group(1)
+    //             ?.trim() ??
+    //         'my_app')
+    //     : 'my_app';
 
-    TemplateRenderer.renderFeature(
-      'feature',
-      featurePath,
-      {
-        'project_name': projectName,
-        'ProjectName': formatName(projectName),
-        'feature_name': featureName,
-        'FeatureName': formatName(featureName),
-      },
-    );
+
   }
 
   void _updateRoutes(String projectPath, String featureName) {

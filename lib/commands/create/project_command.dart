@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:bipul_cli/utils/file_utils.dart';
-import 'package:bipul_cli/utils/template_renderer.dart';
 import 'package:bipul_cli/commands/base_command.dart';
 import 'package:recase/recase.dart';
 
@@ -202,16 +201,16 @@ analyzer:
     final featurePath = p.join(projectPath, 'lib', 'features', 'home');
     Directory(featurePath).createSync(recursive: true);
 
-    TemplateRenderer.renderFeature(
-      'home',
-      featurePath,
-      {
-        'project_name': projectName,
-        'ProjectName': formatName(projectName),
-        'feature_name': 'home',
-        'FeatureName': 'Home',
-      },
-    );
+    // TemplateRenderer.renderFeature(
+    //   'home',
+    //   featurePath,
+    //   {
+    //     'project_name': projectName,
+    //     'ProjectName': formatName(projectName),
+    //     'feature_name': 'home',
+    //     'FeatureName': 'Home',
+    //   },
+    // );
   }
 
   void _showSuccessMessage(

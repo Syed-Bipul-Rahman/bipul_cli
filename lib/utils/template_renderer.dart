@@ -1,15 +1,12 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:mustache_template/mustache_template.dart';
-import 'dart:io';
-import 'package:path/path.dart' as p;
-import 'package:process/process.dart';
 
 class TemplateRenderer {
   /// Renders all .mustache files in a folder using context
-  static void renderAllTemplates(String sourcePath, String targetPath, Map<String, dynamic> context) {
+  static void renderAllTemplates(
+      String sourcePath, String targetPath, Map<String, dynamic> context) {
     final templateDir = Directory(sourcePath);
-    final outputDir = Directory(targetPath)..createSync(recursive: true);
 
     if (!templateDir.existsSync()) {
       throw Exception("Template folder not found at $sourcePath");
@@ -20,8 +17,9 @@ class TemplateRenderer {
     for (var entity in templateDir.listSync(recursive: true)) {
       if (entity is File && entity.path.endsWith('.mustache')) {
         final relativePath = p.relative(entity.path, from: sourcePath);
-        final targetFile = File(p.join(targetPath, relativePath.replaceAll('.mustache', '')))
-          ..parent.createSync(recursive: true);
+        final targetFile =
+            File(p.join(targetPath, relativePath.replaceAll('.mustache', '')))
+              ..parent.createSync(recursive: true);
 
         try {
           final template = Template(entity.readAsStringSync());
