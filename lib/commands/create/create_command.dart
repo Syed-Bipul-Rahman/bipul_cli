@@ -402,10 +402,8 @@ analyzer:
     final insertionPoint = sdkLineEnd + 1;
 
 // Create the dependencies string with proper indentation
-    final dependenciesString = dependencies.entries
-            .map((entry) => '  ${entry.key}: ${entry.value}')
-            .join('\n') +
-        '\n';
+    final dependenciesString =
+        '${dependencies.entries.map((entry) => '  ${entry.key}: ${entry.value}').join('\n')}\n';
 
 // Insert the dependencies after the flutter block
     content =
