@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1
+- Fix Dependency not found issue
+
 ## 1.0.0
 - Include create clean architecture
 - Include create features
