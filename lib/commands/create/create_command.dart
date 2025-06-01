@@ -276,14 +276,16 @@ class CreateCommand extends BaseCommand {
   }
 
 
-  void _applyBipulStructure(String projectPath, String projectName, Map<String, dynamic> options) {
+  void _applyBipulStructure(String projectPath, String projectName,
+      Map<String, dynamic> options) {
     print('\n🏗️ Applying Bipul Architecture...');
 
     final projectLibPath = p.join(projectPath, 'lib');
     final templatesProjectDir = Directory('lib/templates/project/lib');
 
     if (!templatesProjectDir.existsSync()) {
-      throw Exception("Cloned templates not found at ${templatesProjectDir.path}");
+      throw Exception(
+          "Cloned templates not found at ${templatesProjectDir.path}");
     }
 
     // Copy and render all `.mustache` files in lib/
@@ -355,24 +357,23 @@ analyzer:
 
     print(pubAddProcess.stdout);
   }
-
   void _addBipulDependencies(String projectPath) {
     print('\n📦 Adding Bipul dependencies...');
 
     final pubspecFile = File(p.join(projectPath, 'pubspec.yaml'));
     var content = pubspecFile.readAsStringSync();
 
-    // List of dependencies to add
-    final dependencies = [
-      'flutter_cache_manager',
-      'get',
-      'shared_preferences',
-      'logging',
-      'get_it',
-      'shimmer',
-      'flutter_riverpod',
-      // 'connectivity_plus',
-    ];
+    // Map of dependencies with their version constraints
+    final dependencies = {
+      'flutter_cache_manager': '^3.3.1',
+      'get': '^4.6.6',
+      'shared_preferences': '^2.2.2',
+      'logging': '^1.2.0',
+      'get_it': '^7.6.4',
+      'shimmer': '^3.0.0',
+      'flutter_riverpod': '^2.4.9',
+      'connectivity_plus': '^5.0.2',
+    };
 
     // Find the dependencies section
     final dependenciesIndex = content.indexOf('dependencies:');
@@ -380,26 +381,40 @@ analyzer:
       throw Exception('Could not find dependencies section in pubspec.yaml');
     }
 
-    // Find the line after 'flutter:' in dependencies
+    // Find the flutter dependency
     final flutterIndex = content.indexOf('flutter:', dependenciesIndex);
     if (flutterIndex == -1) {
       throw Exception('Could not find flutter dependency in pubspec.yaml');
     }
 
-    // Find the end of the flutter dependency line
-    final flutterLineEnd = content.indexOf('\n', flutterIndex);
-    final insertionPoint = flutterLineEnd + 1;
+    // Find the end of the flutter dependency block (after sdk: flutter)
+    final sdkIndex = content.indexOf('sdk: flutter', flutterIndex);
+    if (sdkIndex == -1) {
+      throw Exception('Could not find sdk: flutter in pubspec.yaml');
+    }
 
-    // Create the dependencies string
-    final dependenciesString = dependencies.map((dep) => '  $dep:').join('\n') + '\n';
+    // Find the next line after sdk: flutter
+    final sdkLineEnd = content.indexOf('\n', sdkIndex);
+    if (sdkLineEnd == -1) {
+      throw Exception('Could not find end of sdk: flutter line');
+    }
 
-    // Insert the dependencies
+    // Insertion point is after the sdk: flutter line
+    final insertionPoint = sdkLineEnd + 1;
+
+    // Create the dependencies string with proper indentation
+    final dependenciesString = dependencies.entries
+        .map((entry) => '  ${entry.key}: ${entry.value}')
+        .join('\n') + '\n';
+
+    // Insert the dependencies after the flutter block
     content = content.substring(0, insertionPoint) +
+        '\n' +
         dependenciesString +
         content.substring(insertionPoint);
 
     pubspecFile.writeAsStringSync(content);
-    print('✅ Added Bipul dependencies to pubspec.yaml');
+    print('✅ Added Bipul dependencies with version constraints to pubspec.yaml');
   }
 
   void _runPostSetupCommands(String projectPath) {
