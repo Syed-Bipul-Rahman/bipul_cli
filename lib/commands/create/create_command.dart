@@ -110,7 +110,8 @@ class CreateCommand extends BaseCommand {
       final projectName = _getProjectNameFromPubspec(projectDir.path);
 
       // Fixed: Use renderAllTemplates instead of renderFeature
-      final featureTemplateDir = 'lib/templates/project/lib/features/home'; // Use home as template
+      final featureTemplateDir =
+          'lib/templates/project/lib/features/home'; // Use home as template
 
       TemplateRenderer.renderAllTemplates(
         featureTemplateDir,
@@ -198,8 +199,7 @@ class CreateCommand extends BaseCommand {
   }
 
   Future<void> _askConfigurationOptions(Map<String, dynamic> options) async {
-    final pen = AnsiPen()
-      ..blue(bold: true);
+    final pen = AnsiPen()..blue(bold: true);
 
     if (options['android_language'] == null) {
       print('\n${pen('Android Language')}');
@@ -238,8 +238,8 @@ class CreateCommand extends BaseCommand {
     return domain;
   }
 
-  void _createFlutterProject(String projectName, String projectPath,
-      Map<String, dynamic> options) {
+  void _createFlutterProject(
+      String projectName, String projectPath, Map<String, dynamic> options) {
     final androidLanguage = options['android_language'] ?? 'kotlin';
     final orgName = "com.${options['company_domain']}.$projectName";
 
@@ -275,9 +275,8 @@ class CreateCommand extends BaseCommand {
     _addBipulDependencies(projectPath);
   }
 
-
-  void _applyBipulStructure(String projectPath, String projectName,
-      Map<String, dynamic> options) {
+  void _applyBipulStructure(
+      String projectPath, String projectName, Map<String, dynamic> options) {
     print('\n🏗️ Applying Bipul Architecture...');
 
     final projectLibPath = p.join(projectPath, 'lib');
@@ -321,7 +320,6 @@ class CreateCommand extends BaseCommand {
     _runPostSetupCommands(projectPath);
   }
 
-
   void _addLinter(String projectPath) {
     print('\n🧼 Adding Flutter Linter...');
 
@@ -357,6 +355,7 @@ analyzer:
 
     print(pubAddProcess.stdout);
   }
+
   void _addBipulDependencies(String projectPath) {
     print('\n📦 Adding Bipul dependencies...');
 
@@ -404,8 +403,9 @@ analyzer:
 
     // Create the dependencies string with proper indentation
     final dependenciesString = dependencies.entries
-        .map((entry) => '  ${entry.key}: ${entry.value}')
-        .join('\n') + '\n';
+            .map((entry) => '  ${entry.key}: ${entry.value}')
+            .join('\n') +
+        '\n';
 
     // Insert the dependencies after the flutter block
     content = content.substring(0, insertionPoint) +
@@ -414,7 +414,8 @@ analyzer:
         content.substring(insertionPoint);
 
     pubspecFile.writeAsStringSync(content);
-    print('✅ Added Bipul dependencies with version constraints to pubspec.yaml');
+    print(
+        '✅ Added Bipul dependencies with version constraints to pubspec.yaml');
   }
 
   void _runPostSetupCommands(String projectPath) {
@@ -445,8 +446,8 @@ analyzer:
     }
   }
 
-  void _showSuccessMessage(String projectName, String projectPath,
-      Map<String, dynamic> options) {
+  void _showSuccessMessage(
+      String projectName, String projectPath, Map<String, dynamic> options) {
     print('\n✅ Successfully created Flutter project "$projectName"');
     print('\n👉 Next steps:');
     print('  cd $projectName');
@@ -459,15 +460,11 @@ analyzer:
     print('  ✓ Bipul Dependencies Added');
     print('  ✓ Code Formatted');
     print(
-        '  ✓ Android language: ${(options['android_language'] ?? 'kotlin')
-            .toUpperCase()}');
+        '  ✓ Android language: ${(options['android_language'] ?? 'kotlin').toUpperCase()}');
     print(
-        '  ✓ iOS language: ${(options['ios_language'] ?? 'swift')
-            .toUpperCase()}');
+        '  ✓ iOS language: ${(options['ios_language'] ?? 'swift').toUpperCase()}');
     print(
-        '  ✓ Linter: ${options['include_linter']
-            ? 'Included'
-            : 'Not included'}');
+        '  ✓ Linter: ${options['include_linter'] ? 'Included' : 'Not included'}');
     print('  ✓ Created using official flutter create');
     print('  ✓ Fully compatible with Flutter ecosystem');
 
@@ -508,8 +505,7 @@ analyzer:
   }
 
   void _showUsage() {
-    final pen = AnsiPen()
-      ..red(bold: true);
+    final pen = AnsiPen()..red(bold: true);
     print('\n${pen('ERROR')}: Invalid create command format');
     print('''
 Usage:
