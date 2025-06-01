@@ -401,17 +401,15 @@ analyzer:
     // Insertion point is after the sdk: flutter line
     final insertionPoint = sdkLineEnd + 1;
 
-    // Create the dependencies string with proper indentation
+// Create the dependencies string with proper indentation
     final dependenciesString = dependencies.entries
             .map((entry) => '  ${entry.key}: ${entry.value}')
             .join('\n') +
         '\n';
 
-    // Insert the dependencies after the flutter block
-    content = content.substring(0, insertionPoint) +
-        '\n' +
-        dependenciesString +
-        content.substring(insertionPoint);
+// Insert the dependencies after the flutter block
+    content =
+        '${content.substring(0, insertionPoint)}\n$dependenciesString${content.substring(insertionPoint)}';
 
     pubspecFile.writeAsStringSync(content);
     print(
