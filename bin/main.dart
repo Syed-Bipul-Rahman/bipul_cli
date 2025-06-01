@@ -1,5 +1,5 @@
 #!/usr/bin/env dart
-// @dart=2.19
+// @dart=3.7.0
 
 import 'package:bipul_cli/bipul_cli.dart';
 
